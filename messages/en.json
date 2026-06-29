@@ -1,0 +1,217 @@
+{
+  "Metadata": {
+    "siteTitle": "Prompt Market — Premium AI Prompts Marketplace",
+    "siteDescription": "Explore and purchase verified, high-quality ChatGPT, Midjourney, Stable Diffusion, and Claude prompts to maximize your productivity.",
+    "cart": {
+      "title": "Shopping Cart",
+      "description": "Review your selected AI prompts and complete your purchase. Get instant access to prompt content after payment."
+    },
+    "login": {
+      "title": "Login",
+      "description": "Sign in to Prompt Market to purchase AI prompts and boost your workflow efficiency."
+    },
+    "prompts": {
+      "title": "All Prompt Market",
+      "description": "Browse all categories of AI prompts including ChatGPT, Midjourney, Stable Diffusion, and Claude. Find the perfect tool for your needs."
+    },
+    "profile": {
+      "title": "Profile Settings",
+      "description": "Manage your Prompt Market account profile image and nickname."
+    },
+    "myPage": {
+      "title": "Purchase History",
+      "description": "View your purchased AI prompts and access your complete purchase history."
+    },
+    "checkout": {
+      "title": "Checkout",
+      "description": "Securely purchase AI prompts with TossPayments."
+    }
+  },
+  "Header": {
+    "prompts": "Prompts"
+  },
+  "Footer": {
+    "copyright": "© {year} Prompt Market. Powered by Google AI Studio."
+  },
+  "HeaderAuth": {
+    "cartAriaLabel": "Go to cart",
+    "profileMenuAriaLabel": "Profile menu",
+    "login": "Login",
+    "signup": "Sign Up",
+    "profileManagement": "Profile Settings",
+    "purchaseHistory": "Purchase History",
+    "logout": "Logout"
+  },
+  "LanguageSwitcher": {
+    "ko": "한국어",
+    "en": "English",
+    "ariaLabel": "Change language"
+  },
+  "HeroSection": {
+    "badge": "Top-Tier Prompt Curation",
+    "title1": "Discover the Latest",
+    "title2": "AI Prompts in One Place",
+    "description": "From image and text generation to coding architecture — download expert-verified, high-efficiency prompts instantly and supercharge your workflow.",
+    "cta": "Browse Prompts"
+  },
+  "HomeFiltersAndGrid": {
+    "filterAll": "All",
+    "searchPlaceholder": "Search prompts...",
+    "featuredPrompts": "Featured Prompts",
+    "salesCount": "{count}+ sales",
+    "price": "Price",
+    "viewDetails": "View Details",
+    "addToCart": "Add to Cart",
+    "inCart": "In Cart",
+    "noResults": "No prompts match your search.",
+    "noResultsHint": "Try different keywords or tags."
+  },
+  "PromptsPage": {
+    "title": "All Prompt Market",
+    "description": "Browse expert-verified prompts for workflow automation, high-quality image generation, architecture planning, and more — all in one place.",
+    "filterAll": "View All",
+    "searchPlaceholder": "Search title, content, tags...",
+    "resultCount": "{count} results",
+    "sortBy": "Sort by:",
+    "sortPopular": "Popular",
+    "sortRating": "Top Rated",
+    "sortPriceLow": "Price: Low to High",
+    "sortPriceHigh": "Price: High to Low",
+    "resetFilter": "Reset Filters",
+    "noResults": "No prompts match the current filters.",
+    "noResultsHint": "Try different keywords or filter tabs.",
+    "viewDetails": "View Details",
+    "addToCart": "Add to Cart",
+    "inCart": "In Cart",
+    "salesCount": "{count}+ sales",
+    "price": "Price",
+    "promptList": "Prompt List"
+  },
+  "PromptDetailPage": {
+    "notFound": "Looking for this prompt...",
+    "backToHome": "Back to Home",
+    "back": "Back",
+    "detailInfo": "Prompt Details",
+    "creator": "By {author}",
+    "viewCount": "{count} views",
+    "salesCount": "{count}+ sales",
+    "price": "Price",
+    "alreadyPurchased": "You already own this prompt.",
+    "unlockPromptCode": "Unlocks Prompt Code",
+    "copied": "Copied",
+    "copy": "Copy",
+    "promptUsageHint": "* Copy the prompt from the terminal above and paste it into {category} to get started!",
+    "locked": "🔒 Purchase to unlock the full prompt text.",
+    "addToCart": "Add to Cart",
+    "inCart": "Already in Cart",
+    "buyNow": "Buy Now",
+    "digitalDownload": "Instant Digital Download",
+    "digitalDownloadDesc": "Unlock the prompt code immediately after payment — accessible here or from your Purchase History.",
+    "checkoutTitle": "Checkout",
+    "checkoutDesc": "Purchase this prompt and unlock full access.",
+    "finalPrice": "Total",
+    "cancel": "Cancel",
+    "confirm": "Confirm Payment",
+    "copiedToast": "Prompt copied to clipboard!",
+    "copyFailed": "Copy failed. Please copy manually.",
+    "thumbnail": "Thumbnail",
+    "priceUnit": "₩{price}"
+  },
+  "CartPage": {
+    "title": "Shopping Cart",
+    "emptyTitle": "Your cart is empty.",
+    "emptyDesc": "Browse our best AI prompts and add them to your cart!",
+    "continueShopping": "Continue Shopping",
+    "selectedItems": "Selected items ({count})",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping / Fees",
+    "shippingFree": "Free",
+    "total": "Order Total",
+    "checkout": "Pay ₩{price}",
+    "demoNotice": "This is a virtual payment demo. No actual charges will be made.",
+    "paymentSummary": "Order Summary",
+    "removeItem": "Remove from cart",
+    "loginRequired": "Please log in to complete your purchase.",
+    "successTitle": "Payment Complete!",
+    "successDesc": "Your order has been confirmed.\nYour purchased prompts are now unlocked.",
+    "viewPurchases": "View Purchase History",
+    "priceUnit": "₩{price}"
+  },
+  "PaymentModal": {
+    "brand": "toss",
+    "brandSub": "payments",
+    "closeAriaLabel": "Close payment window",
+    "processingTitle": "Securely processing your demo payment...",
+    "mockPayment": "Prompt Market Demo Payment",
+    "selectMethod": "SELECT PAYMENT METHOD",
+    "creditCard": "Credit Card",
+    "tossPayLabel": "Pay",
+    "bankTransfer": "Bank Transfer",
+    "bankFee": "No fee",
+    "agreePrivacy": "Agree to Privacy Policy (Required)",
+    "agreeTerms": "Agree to Payment Terms (Required)",
+    "payButton": "Pay ₩{price}"
+  },
+  "LoginPage": {
+    "loginTitle": "Sign in to Prompt Market",
+    "signupTitle": "Create an account",
+    "loginDesc": "Sign in to purchase and access your prompts.",
+    "signupDesc": "Create a new account with your email.",
+    "googleLogin": "Continue with Google",
+    "orEmail": "or continue with email",
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "hidePassword": "Hide password",
+    "showPassword": "Show password",
+    "login": "Sign In",
+    "signup": "Sign Up",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "emailSent": "A confirmation email has been sent. Please check your inbox.",
+    "unknownError": "An unknown error occurred."
+  },
+  "ProfilePage": {
+    "title": "Profile Settings",
+    "loginRequired": "Please log in to view your profile.",
+    "goToLogin": "Go to Login",
+    "profileImage": "Profile Photo",
+    "uploadHint": "* Click or drag & drop to upload.\nPNG, JPG formats are supported.",
+    "changePhoto": "Change",
+    "emailLabel": "Email Address",
+    "nicknameLabel": "Nickname",
+    "editNickname": "Edit",
+    "saveNickname": "Save",
+    "cancelEdit": "Cancel",
+    "nicknamePlaceholder": "Enter new nickname",
+    "nicknameRequired": "Please enter a nickname.",
+    "imageOnly": "Only image files are allowed.",
+    "imageChanged": "Profile photo updated."
+  },
+  "MyPage": {
+    "title": "Purchase History",
+    "loginRequired": "Please log in to view your purchase history.",
+    "goToLogin": "Go to Login",
+    "emptyTitle": "No purchases yet.",
+    "emptyDesc": "Your purchased prompts will appear here and you can copy them instantly.",
+    "browseMarket": "Browse Market",
+    "ownedPrompts": "Your Prompts ({count})",
+    "purchaseDate": "Purchased: {date}",
+    "viewAgain": "View Again",
+    "lifetime": "* Prompt Market provides lifetime unlimited access and copy rights for all purchases."
+  },
+  "CartContext": {
+    "alreadyInCart": "Already in your cart.",
+    "addedToCart": "Added to cart."
+  },
+  "AuthContext": {
+    "loggedOut": "You have been logged out.",
+    "profileSaved": "Profile saved.",
+    "profileSaveFailed": "Failed to save profile."
+  },
+  "ModeToggle": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "ariaLabel": "Change theme"
+  }
+}

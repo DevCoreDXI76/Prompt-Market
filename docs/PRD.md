@@ -1,0 +1,371 @@
+# [PRD] 프롬프트 스토어 "Prompt Market"
+
+> **문서 구조:** 본 PRD는 **표준 라우팅**을 기준으로 화면을 정의하고, **AS-IS(현재 구현)** 와 **TO-BE(목표)** 를 분리하여 기술한다.
+
+---
+
+## 1. 서비스 개요
+
+- **컨셉:** AI 프롬프트를 탐색·구매하고, 장바구니에 담아 결제하며, 프로필과 구매 내역을 관리할 수 있는 온라인 상점.
+- **제품명:** Prompt Market
+- **문서 범위:** 화면 명세, 라우팅, 데이터 모델, 핵심 로직 (AS-IS / TO-BE)
+
+| 구분 | 요약 |
+|------|------|
+| **AS-IS** | 클라이언트 프로토타입 — 정적 상품 데이터, `localStorage` 상태, 가상 결제 데모 |
+| **TO-BE** | Supabase 백엔드, Supabase Auth, Supabase Storage, 토스페이먼츠 실결제, 관리자 상품 관리 |
+
+---
+
+## 2. 표준 라우팅 (Standard Routing)
+
+앱의 **공식 라우트 레지스트리**이다. 신규 화면 추가·리팩터링 시 본 표를 우선 갱신한다.
+
+### 2.1. 라우트 레지스트리
+
+| # | 경로 | 화면명 | 접근 | AS-IS | TO-BE |
+|---|------|--------|------|-------|-------|
+| R01 | `/` | 메인 (랜딩 + 미리보기) | Public | 구현됨 | 유지 |
+| R02 | `/prompts` | 전체 프롬프트 마켓 | Public | 구현됨 | 유지 |
+| R03 | `/prompt/[id]` | 프롬프트 상세 | Public | 구현됨 | 유지 |
+| R04 | `/cart` | 장바구니 | Public (결제 시 로그인) | 구현됨 | 유지 |
+| R05 | `/login` | 로그인 | Public | 구현됨 | 회원가입·OAuth 확장 |
+| R06 | `/profile` | 프로필 관리 | Auth | 구현됨 | 유지 |
+| R07 | `/my-page` | 구매 내역 | Auth | 구현됨 | 유지 |
+
+- **Public:** 비로그인 접근 가능.
+- **Auth:** 로그인 필요. 미로그인 시 로그인 안내 UI 및 `/login` 이동 제공.
+- **동적 세그먼트:** `[id]` = 상품 ID (`lib/promptData.ts`의 `PromptProduct.id`, AS-IS 기준 `"1"`~`"4"`).
+
+### 2.2. 네비게이션 맵
+
+```
+Header (전역)
+├── 로고 ──────────────────────────────→ /
+├── "프롬프트" ────────────────────────→ /prompts
+├── 장바구니 아이콘 (뱃지) ────────────→ /cart
+└── 프로필 영역
+    ├── [비로그인] "로그인" ───────────→ /login
+    └── [로그인] 드롭다운
+        ├── "프로필 관리" ─────────────→ /profile
+        ├── "구매 내역" ───────────────→ /my-page
+        └── "로그아웃" ────────────────→ / (이동)
+
+페이지 내부 주요 링크
+├── / Hero CTA "프롬프트 둘러보기" ────→ /prompts
+├── / 상품 카드 "상세보기" ────────────→ /prompt/[id]
+├── /prompts 상품 카드 "상세보기" ───→ /prompt/[id]
+├── /prompt/[id] "돌아가기" ───────────→ /
+├── /cart 빈 상태 "쇼핑 계속하기" ─────→ /
+├── /cart 결제 성공 ───────────────────→ /my-page
+├── /my-page 빈 상태 "마켓 구경 가기" ─→ /
+└── /my-page "내용 다시보기" ──────────→ /prompt/[id]
+```
+
+### 2.3. `/` vs `/prompts` 역할 분리
+
+| 기능 | R01 `/` | R02 `/prompts` |
+|------|---------|----------------|
+| Hero / 3D 마퀴 쇼케이스 | O | X |
+| 카테고리 필터 | O | O |
+| 키워드 검색 (제목·태그·설명) | O | O |
+| author 검색 | X | O |
+| 정렬 (인기/평점/가격) | X | O |
+| 결과 카운트 | X | O |
+| 필터 초기화 | X | O |
+| 상품 카드 태그 표시 | 최대 2개 | 전체 |
+
+### 2.4. 결제 플로우 라우팅
+
+| 플로우 | 진입 | 경유 | 종료 |
+|--------|------|------|------|
+| 장바구니 결제 | R04 `/cart` | 모의 Toss UI (오버레이) | R07 `/my-page` |
+| 바로 구매 | R03 `/prompt/[id]` | 확인 모달 (결제 UI 없음) | R03 (구매 완료 UI) |
+
+---
+
+## 3. AS-IS — 현재 구현 (프로토타입)
+
+### 3.1. 아키텍처 요약
+
+| 항목 | AS-IS 구현 |
+|------|------------|
+| 프레임워크 | Next.js App Router |
+| 상품 데이터 | `lib/promptData.ts` — 정적 `PROMPT_PRODUCTS` (4개) |
+| 상태 관리 | `context/AppContext.tsx` + 브라우저 `localStorage` |
+| 인증 | 이메일 단독 프로토타입 로그인, **첫 방문 시 데모 사용자 자동 로그인** |
+| 결제 | 가상 결제 데모 (실 PG 연동 없음) |
+| 사용자 역할 | User(소비자)만 활성 |
+
+**프로토타입 특성:**
+- 비밀번호 없는 이메일 로그인.
+- 첫 방문 시 `devcoredxi00@coredxi.com` 데모 사용자 자동 생성·로그인.
+- `/login`은 이메일 전환 또는 로그아웃 후 재로그인용.
+
+---
+
+### 3.2. 화면 명세 (AS-IS)
+
+#### 3.2.1. 헤더 (R01~R07 공통)
+
+- **역할:** 전역 네비게이션.
+- **기능:**
+    - **로고** → R01 `/`
+    - **"프롬프트"** → R02 `/prompts` (현재 경로 활성 스타일)
+    - **장바구니 아이콘** — 장바구니 상품 수 뱃지, 클릭 → R04 `/cart`
+    - **프로필 드롭다운**
+        - 비로그인: "로그인" → R05 `/login`
+        - 로그인: 프로필 이미지/닉네임 → 드롭다운
+            - "프로필 관리" → R06 `/profile`
+            - "구매 내역" → R07 `/my-page`
+            - "로그아웃" → `/` 이동
+
+#### 3.2.2. 메인 — 랜딩 + 미리보기 (R01 `/`)
+
+- **역할:** 서비스 소개 + 인기 프롬프트 미리보기.
+- **데이터:** `PROMPT_PRODUCTS` 전체.
+- **기능:**
+    - **Hero:** 슬로건, "프롬프트 둘러보기" CTA → R02 `/prompts`
+    - **3D 마퀴 쇼케이스:** 장식용 데모 카드 (달러 가격 등 **실제 catalog 아님**)
+    - **필터/검색:** 카테고리 탭(전체, ChatGPT, Midjourney, Stable Diffusion, Claude), 제목·태그·설명 검색
+    - **상품 카드:** 이미지, 카테고리, 평점, 판매수, 제목, 태그(≤2), 가격(원)
+        - "상세보기" → R03 `/prompt/[id]`
+        - "담기" → 장바구니 추가, 토스트, 중복 시 "장바구니에 있음" 비활성
+    - **검색 결과 없음:** 안내 메시지
+
+#### 3.2.3. 전체 프롬프트 마켓 (R02 `/prompts`)
+
+- **역할:** 전체 상품 탐색·정렬.
+- **데이터:** `PROMPT_PRODUCTS` 전체.
+- **기능:**
+    - 페이지 타이틀 "전체 프롬프트 마켓"
+    - 필터/검색: R01과 동일 + **author** 검색
+    - 정렬: 인기순, 평점순, 낮은/높은 가격순
+    - 결과 카운트, 필터 초기화 버튼
+    - 상품 카드: R01과 유사, **전체 태그** 표시
+
+#### 3.2.4. 프롬프트 상세 (R03 `/prompt/[id]`)
+
+- **역할:** 상품 상세 및 구매/장바구니 유도.
+- **데이터:** URL `[id]` 상품, 구매 목록, 장바구니 상태.
+- **기능:**
+    - 상단 "돌아가기" → R01 `/`
+    - **구매 완료 시:** 구매 버튼 제거, `prompt_text` 터미널 UI + 복사 버튼 + 토스트
+    - **구매 전:**
+        - 좌측: 이미지 갤러리(섬네일 전환), 상세 설명
+        - 우측(sticky): 카테고리, 제작자, 제목, 평점, 조회수, 가격, 잠금 안내
+        - "장바구니 담기" — R01과 동일
+        - "바로 구매하기" — 로그인 필요, 확인 모달 → 즉시 구매 (장바구니·결제 UI 생략)
+        - "디지털 다운로드 즉시 사용" 안내
+    - **상품 없음:** 안내 + R01 링크
+
+#### 3.2.5. 장바구니 (R04 `/cart`)
+
+- **역할:** 구매 상품 확인 및 가상 결제.
+- **데이터:** 장바구니 ID 목록 + `PROMPT_PRODUCTS`.
+- **기능:**
+    - **빈 상태:** 안내 + "쇼핑 계속하기" → R01 `/`
+    - **상품 있음:** 이미지, 카테고리, 제목, 가격, 삭제(애니메이션)
+    - **결제 요약:** 상품금액, 수수료 0원, 총 주문금액
+    - **"결제하기":** 로그인 필요 → 모의 Toss UI → 1.5s 후 구매 처리 → 성공 모달 → R07 `/my-page`
+    - **데모 안내:** "가상 결제 데모… 실결제는 청구되지 않습니다."
+
+#### 3.2.6. 프로필 관리 (R06 `/profile`)
+
+- **접근:** Auth. 미로그인 → 안내 + R05 `/login`
+- **기능:**
+    - 아바타: 클릭/드래그앤드롭 → base64 즉시 저장 + 토스트
+    - 이메일: 읽기 전용
+    - 닉네임: 읽기/수정(≤15자), 저장/취소 + 토스트
+
+#### 3.2.7. 구매 내역 (R07 `/my-page`)
+
+- **접근:** Auth. 미로그인 → 안내 + R05 `/login`
+- **기능:**
+    - **빈 상태:** 안내 + "마켓 구경 가기" → R01 `/`
+    - **구매 목록:** 썸네일, 제목, 구매일(`YYYY-MM-DD HH:mm`), "내용 다시보기" → R03 `/prompt/[id]`
+    - "평생 무제한 접근" 안내
+
+#### 3.2.8. 로그인 (R05 `/login`)
+
+- **역할:** 프로토타입 이메일 로그인.
+- **기능:**
+    - 이메일 입력(비밀번호 없음), 형식 검증
+    - 기본값: `devcoredxi00@coredxi.com`
+    - 로그인: 닉네임 = `@` 앞부분, 프로필 이미지 = picsum 시드 URL, 토스트 후 R01 `/`
+    - 프로토타입 안내 문구
+
+#### 3.2.9. 공통 UI
+
+- **토스트:** 장바구니·프로필·결제·복사 피드백 (세션 메모리, 미저장)
+- **푸터:** `© {연도} Prompt Market. Powered by Google AI Studio.`
+
+---
+
+### 3.3. 데이터/상태 모델 (AS-IS)
+
+서버 DB 없이 **브라우저 `localStorage`** + **React Context** (`context/AppContext.tsx`)로 관리.
+
+#### localStorage 키
+
+| 키 | 타입 | 설명 |
+|----|------|------|
+| `pm_user` | JSON (`User`) | 로그인 사용자 |
+| `pm_cart` | JSON (`string[]`) | 장바구니 상품 ID 배열 |
+| `pm_purchases` | JSON (`PurchaseItem[]`) | 구매 내역 |
+
+- **로그아웃:** `pm_user`만 삭제. `pm_cart`, `pm_purchases` 유지.
+
+#### 데이터 구조
+
+**User (`pm_user`):**
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `email` | string | 이메일 |
+| `nickname` | string | 닉네임 |
+| `profileImage` | string | URL 또는 base64 data URL |
+
+**PurchaseItem (`pm_purchases` 항목):**
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `id` | string | 상품 ID |
+| `title` | string | 제목 |
+| `image` | string | 대표 이미지 URL |
+| `price` | number | 구매 당시 가격 (원) |
+| `date` | string | `YYYY-MM-DD HH:mm` |
+
+**PromptProduct (`lib/promptData.ts`):**
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `id` | string | 상품 ID |
+| `title` | string | 제목 |
+| `price` | number | 가격 (원) |
+| `category` | enum | ChatGPT \| Midjourney \| Stable Diffusion \| Claude |
+| `description` | string | 상세 설명 |
+| `images` | string[] | 결과물 이미지 URL |
+| `prompt_text` | string | 프롬프트 원문 (구매 후 열람) |
+| `tags` | string[] | 태그 |
+| `rating` | number | 평점 |
+| `author` | string | 제작자 |
+| `views` | number | 조회수 |
+| `salesCount` | number | 판매수 |
+
+#### 핵심 로직 (AS-IS)
+
+| 로직 | 동작 |
+|------|------|
+| `addToCart` | 중복 ID 미추가 → `pm_cart` 저장 → 토스트 |
+| `removeFromCart` | ID 제거 → `pm_cart` 저장 |
+| `addPurchases` | `PurchaseItem` 생성(중복 스킵) → `pm_purchases` prepend → cart에서 ID 제거 |
+| 프롬프트 잠금 | 미구매 시 `prompt_text` 숨김, 구매 후 열람·복사 |
+| 자동 로그인 | `pm_user` 없으면 데모 사용자 생성 |
+| 장바구니 결제 | 모의 Toss UI → `addPurchases(전체 cart ID)` |
+| 바로 구매 | 확인 모달 → `addPurchases([상품 ID])` |
+
+---
+
+## 4. TO-BE — 목표 아키텍처 (미구현)
+
+AS-IS 프로토타입을 **실서비스**로 전환할 때의 목표 상태이다. 본 섹션은 **현재 구현되지 않음**.
+
+### 4.1. AS-IS → TO-BE 전환 요약
+
+| 영역 | AS-IS | TO-BE |
+|------|-------|-------|
+| 상품 데이터 | `lib/promptData.ts` 정적 | Supabase `prompts` 테이블 |
+| 인증 | 이메일 프로토타입 + 자동 로그인 | Supabase Auth (회원가입, 비밀번호, OAuth) |
+| 장바구니 | `pm_cart` localStorage | Supabase `carts` 테이블 |
+| 구매 내역 | `pm_purchases` localStorage | Supabase `purchases` 테이블 |
+| 프로필 | `pm_user` localStorage, base64 아바타 | `profiles` 테이블 + Supabase Storage |
+| 결제 | 모의 UI / 즉시 처리 | 토스페이먼츠 SDK 실결제, 서버 금액 검증 |
+| 관리자 | 없음 | Supabase 대시보드 상품 등록/관리 |
+| 라우팅 | R01~R07 (본 PRD 표준) | **동일 유지** (R05 회원가입·OAuth 확장) |
+
+### 4.2. 사용자 역할 (TO-BE)
+
+| 역할 | 설명 |
+|------|------|
+| **User** | 회원가입 후 프롬프트 탐색·구매·프로필 관리 |
+| **Admin** | 유일한 판매자. Supabase 대시보드에서 상품(프롬프트) 등록/관리 |
+
+### 4.3. 표준 라우팅 (TO-BE 변경점)
+
+| 경로 | TO-BE 변경 |
+|------|------------|
+| R01~R04, R06~R07 | 변경 없음. 데이터 소스만 Supabase로 전환 |
+| R05 `/login` | 회원가입, 비밀번호 인증, OAuth 등 Supabase Auth 연동 |
+| (신규 가능) | 관리자 전용 라우트는 Supabase 대시보드 사용 — 앱 라우트 추가 여부는 별도 결정 |
+
+### 4.4. 데이터베이스 스키마 (Supabase 예시)
+
+#### `profiles`
+
+| 컬럼 | 타입 | 설명 |
+|------|------|------|
+| `id` | uuid, PK, FK → `auth.users.id` | 인증 ID 1:1 |
+| `nickname` | text | 닉네임 |
+| `avatar_url` | text, nullable | 프로필 이미지 URL |
+| `updated_at` | timestamp | 수정일 |
+
+#### `prompts`
+
+| 컬럼 | 타입 | 설명 |
+|------|------|------|
+| `id` | uuid, PK | 프롬프트 ID |
+| `created_at` | timestamp | 생성일 |
+| `title` | text | 제목 |
+| `description` | text | 상세 설명 |
+| `price` | integer | 가격 |
+| `prompt_text` | text | 프롬프트 원문 |
+| `image_urls` | text[] | Supabase Storage 이미지 URL |
+
+#### `carts`
+
+| 컬럼 | 타입 | 설명 |
+|------|------|------|
+| `id` | bigint, PK | 항목 ID |
+| `created_at` | timestamp | 생성일 |
+| `user_id` | uuid, FK → `auth.users.id` | 사용자 |
+| `prompt_id` | uuid, FK → `prompts.id` | 프롬프트 |
+| — | unique(`user_id`, `prompt_id`) | 중복 담기 방지 |
+
+#### `purchases`
+
+| 컬럼 | 타입 | 설명 |
+|------|------|------|
+| `id` | uuid, PK | 구매 ID |
+| `created_at` | timestamp | 구매일 |
+| `buyer_id` | uuid, FK → `auth.users.id` | 구매자 |
+| `prompt_id` | uuid, FK → `prompts.id` | 프롬프트 |
+| `payment_order_id` | text, unique | 토스페이먼츠 주문 ID |
+
+### 4.5. 인증·스토리지 (TO-BE)
+
+- **Supabase Auth:** 실제 회원가입·로그인.
+- **프로필 분리:** `auth.users`(인증) + `profiles`(부가 정보). 회원가입 트리거로 `profiles` 자동 생성.
+- **Supabase Storage:** 프로필 이미지 업로드 → `avatar_url` 저장.
+
+### 4.6. 결제·서버 로직 (TO-BE)
+
+- **토스페이먼츠 SDK:** 실결제창 호출.
+- **장바구니 결제:**
+    - 서버가 `carts` 조회 후 총액 계산 — **클라이언트 가격 미신뢰**.
+    - 결제 성공 **트랜잭션:** 승인 → `purchases` 기록 → `carts` 삭제.
+- **바로 구매 (TO-BE):** 장바구니 경유 없이 단건 결제 API 호출 (AS-IS의 즉시 처리와 UX 유사, 백엔드는 PG 연동).
+
+---
+
+## 부록: 화면–라우트–데이터 대조표 (AS-IS)
+
+| 라우트 ID | 경로 | 주요 데이터 소스 (AS-IS) |
+|-----------|------|--------------------------|
+| R01 | `/` | `PROMPT_PRODUCTS`, `pm_cart` |
+| R02 | `/prompts` | `PROMPT_PRODUCTS`, `pm_cart` |
+| R03 | `/prompt/[id]` | `PROMPT_PRODUCTS`, `pm_purchases`, `pm_cart` |
+| R04 | `/cart` | `pm_cart`, `PROMPT_PRODUCTS`, `pm_user` |
+| R05 | `/login` | — (→ `pm_user` 생성) |
+| R06 | `/profile` | `pm_user` |
+| R07 | `/my-page` | `pm_purchases`, `PROMPT_PRODUCTS` |

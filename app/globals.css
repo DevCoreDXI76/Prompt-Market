@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+/* Tailwind CSS v4: class 기반 다크 모드 활성화 */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ── 라이트 테마 색상 토큰 ── */
+:root {
+  --color-bg: 248 250 252;          /* slate-50 */
+  --color-surface: 255 255 255;     /* white */
+  --color-surface-muted: 241 245 249; /* slate-100 */
+  --color-border: 226 232 240;      /* slate-200 */
+  --color-border-subtle: 241 245 249; /* slate-100 */
+  --color-text-primary: 15 23 42;   /* slate-900 */
+  --color-text-secondary: 71 85 105; /* slate-600 */
+  --color-text-muted: 148 163 184;  /* slate-400 */
+  --color-brand: 79 70 229;         /* indigo-600 */
+  --color-brand-bg: 238 242 255;    /* indigo-50 */
+}
+
+/* ── 다크 테마 색상 토큰 ── */
+.dark {
+  --color-bg: 9 9 11;               /* zinc-950 */
+  --color-surface: 24 24 27;        /* zinc-900 */
+  --color-surface-muted: 39 39 42;  /* zinc-800 */
+  --color-border: 63 63 70;         /* zinc-700 */
+  --color-border-subtle: 39 39 42;  /* zinc-800 */
+  --color-text-primary: 250 250 250; /* zinc-50 */
+  --color-text-secondary: 161 161 170; /* zinc-400 */
+  --color-text-muted: 113 113 122;  /* zinc-500 */
+  --color-brand: 129 140 248;       /* indigo-400 */
+  --color-brand-bg: 30 27 75;       /* indigo-950 */
+}
+
+/* ── Lighthouse 최적화: CSS 애니메이션 (framer-motion 대체) ── */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-33.333%);
+  }
+}
+
+@keyframes marquee-reverse {
+  0% {
+    transform: translateX(-33.333%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s ease-out both;
+}
+
+.animate-fade-in-up-card {
+  animation: fade-in-up 0.4s ease-out both;
+}
+
+.animate-marquee-slow {
+  animation: marquee 40s linear infinite;
+}
+
+.animate-marquee-reverse-slow {
+  animation: marquee-reverse 40s linear infinite;
+}
+
+@keyframes toast-exit {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.85) translateY(8px);
+  }
+}
+
+.animate-toast-exit {
+  animation: toast-exit 0.15s ease-in both;
+}
+
+@keyframes cart-exit {
+  to {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+
+.animate-cart-exit {
+  animation: cart-exit 0.2s ease-in both;
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s ease-out both;
+}

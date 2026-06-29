@@ -1,0 +1,6 @@
+{
+  "name": "Prompt Market",
+  "description": "판매 중인 최신 AI 프롬프트를 탐색, 장바구니에 담고, 안전하게 구매하여 바로 사용할 수 있는 프롬프트 거래 플랫폼입니다.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
