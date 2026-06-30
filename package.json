@@ -10,7 +10,8 @@
     "clean": "next clean",
     "seed:prompts": "node node_modules/tsx/dist/cli.mjs --env-file=.env scripts/seed-prompts.ts",
     "prepare": "node scripts/install-git-hooks.mjs",
-    "hooks:install": "node scripts/install-git-hooks.mjs"
+    "hooks:install": "node scripts/install-git-hooks.mjs",
+    "hooks:backfill": "py scripts/git-hooks/notion_task_logger.py --update --backfill"
   },
   "dependencies": {
     "@clerk/localizations": "^4.11.0",

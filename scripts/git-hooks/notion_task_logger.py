@@ -7,6 +7,7 @@ import os
 import sys
 import subprocess
 from pathlib import Path
+from typing import Optional
 
 if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
     try:
@@ -89,12 +90,14 @@ def git_cmd(args: list) -> str:
     return result.stdout.strip().lstrip("\ufeff")
 
 
-def get_commit_info() -> tuple:
-    message = git_cmd(["log", "-1", "--pretty=%B"])
-    commit_hash = git_cmd(["log", "-1", "--pretty=%H"])
-    author_time = git_cmd(["log", "-1", "--pretty=%aI"])
-    commit_time = git_cmd(["log", "-1", "--pretty=%cI"])
-    changed_files = git_cmd(["diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD"])
+def get_commit_info(commit_ref: str = "HEAD") -> tuple:
+    message = git_cmd(["log", "-1", "--pretty=%B", commit_ref])
+    commit_hash = git_cmd(["log", "-1", "--pretty=%H", commit_ref])
+    author_time = git_cmd(["log", "-1", "--pretty=%aI", commit_ref])
+    commit_time = git_cmd(["log", "-1", "--pretty=%cI", commit_ref])
+    changed_files = git_cmd(
+        ["diff-tree", "--no-commit-id", "--name-only", "-r", commit_hash]
+    )
 
     try:
         remote_url = git_cmd(["remote", "get-url", "origin"])
@@ -317,16 +320,13 @@ def append_file_blocks(token: str, page_id: str, files: list[str]) -> None:
         )
 
 
-def create_notion_task(
-    token: str,
-    tasks_db_id: str,
+def build_task_properties(
     project_page_id: str,
     plan_page_id: str,
     task_name: str,
     prefix: str,
     commit_url: str,
     changed_files_summary: str,
-    all_files: list[str],
     author_time: str,
     commit_time: str,
     lessons: str,
@@ -374,6 +374,77 @@ def create_notion_task(
     if prompt_text:
         properties["프롬프트 원문"] = {"rich_text": [{"text": {"content": prompt_text}}]}
 
+    return properties
+
+
+def query_tasks_db(token: str, tasks_db_id: str, body: dict) -> list:
+    response = requests.post(
+        f"{NOTION_API}/databases/{tasks_db_id}/query",
+        headers=notion_headers(token),
+        json=body,
+        timeout=15,
+    )
+    if not response.ok:
+        raise RuntimeError(
+            f"Notion query {response.status_code}: {response.text[:500]}"
+        )
+    return response.json().get("results", [])
+
+
+def find_existing_task(
+    token: str,
+    tasks_db_id: str,
+    commit_hash: str,
+    commit_url: str,
+    task_name: str,
+) -> Optional[dict]:
+    if commit_url:
+        for fragment in (commit_hash, commit_hash[:7]):
+            results = query_tasks_db(
+                token,
+                tasks_db_id,
+                {
+                    "filter": {
+                        "property": "커밋 링크",
+                        "url": {"contains": fragment},
+                    }
+                },
+            )
+            if results:
+                return results[0]
+
+    title_without_prefix = task_name
+    for prefix in KNOWN_PREFIXES:
+        marker = prefix + ":"
+        if task_name.lower().startswith(marker):
+            title_without_prefix = task_name[len(marker) :].strip()
+            break
+
+    for candidate in {task_name, title_without_prefix}:
+        if not candidate:
+            continue
+        results = query_tasks_db(
+            token,
+            tasks_db_id,
+            {
+                "filter": {
+                    "property": "Task명",
+                    "title": {"contains": candidate[:100]},
+                }
+            },
+        )
+        if results:
+            return results[0]
+
+    return None
+
+
+def create_notion_task(
+    token: str,
+    tasks_db_id: str,
+    properties: dict,
+    all_files: list[str],
+) -> dict:
     response = requests.post(
         f"{NOTION_API}/pages",
         headers=notion_headers(token),
@@ -392,23 +463,118 @@ def create_notion_task(
     return page
 
 
-def main():
-    repo_root = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
+def update_notion_task(token: str, page_id: str, properties: dict) -> dict:
+    response = requests.patch(
+        f"{NOTION_API}/pages/{page_id}",
+        headers=notion_headers(token),
+        json={"properties": properties},
+        timeout=15,
+    )
 
-    env = load_env(repo_root)
-    token = env.get("NOTION_TOKEN", "")
-    tasks_db_id = env.get("NOTION_TASKS_DB_ID", "")
-    project_page_id = env.get("NOTION_PROJECT_PAGE_ID", "")
-    plan_page_id = env.get("NOTION_PLAN_PAGE_ID", "")
+    if not response.ok:
+        raise RuntimeError(f"Notion API {response.status_code}: {response.text[:500]}")
 
-    if not all([token, tasks_db_id, project_page_id]):
-        raise ValueError(
-            "NOTION_TOKEN, NOTION_TASKS_DB_ID, NOTION_PROJECT_PAGE_ID가 "
-            ".env에 모두 설정되어야 합니다."
+    return response.json()
+
+
+def upsert_notion_task(
+    token: str,
+    tasks_db_id: str,
+    project_page_id: str,
+    plan_page_id: str,
+    task_name: str,
+    prefix: str,
+    commit_hash: str,
+    commit_url: str,
+    changed_files_summary: str,
+    all_files: list[str],
+    author_time: str,
+    commit_time: str,
+    lessons: str,
+    test_result: str,
+    prompt_text: str,
+    vibe_tool: str,
+    priority: str,
+    update_only: bool = False,
+) -> tuple[str, str]:
+    properties = build_task_properties(
+        project_page_id,
+        plan_page_id,
+        task_name,
+        prefix,
+        commit_url,
+        changed_files_summary,
+        author_time,
+        commit_time,
+        lessons,
+        test_result,
+        prompt_text,
+        vibe_tool,
+        priority,
+    )
+
+    existing = find_existing_task(
+        token, tasks_db_id, commit_hash, commit_url, task_name
+    )
+
+    if existing:
+        update_notion_task(token, existing["id"], properties)
+        if all_files:
+            append_file_blocks(token, existing["id"], all_files)
+        return "updated", task_name
+
+    if update_only:
+        raise LookupError(
+            f"기존 Task를 찾을 수 없습니다: {task_name} ({commit_hash[:7]})"
         )
 
+    create_notion_task(token, tasks_db_id, properties, all_files)
+    return "created", task_name
+
+
+def parse_args(argv: list[str]) -> tuple:
+    repo_root = os.getcwd()
+    commit_ref = "HEAD"
+    update_only = False
+    backfill_refs: list[str] = []
+
+    i = 0
+    while i < len(argv):
+        arg = argv[i]
+        if arg == "--commit" and i + 1 < len(argv):
+            commit_ref = argv[i + 1]
+            i += 2
+            continue
+        if arg == "--update":
+            update_only = True
+            i += 1
+            continue
+        if arg == "--backfill" and i + 1 < len(argv):
+            backfill_refs = [
+                ref.strip() for ref in argv[i + 1].split(",") if ref.strip()
+            ]
+            i += 2
+            continue
+        if not arg.startswith("-") and repo_root == os.getcwd():
+            repo_root = arg
+        i += 1
+
+    return repo_root, commit_ref, update_only, backfill_refs
+
+
+def process_commit(
+    repo_root: str,
+    env: dict,
+    commit_ref: str,
+    update_only: bool,
+) -> tuple[str, str]:
+    token = env["NOTION_TOKEN"]
+    tasks_db_id = env["NOTION_TASKS_DB_ID"]
+    project_page_id = env["NOTION_PROJECT_PAGE_ID"]
+    plan_page_id = env.get("NOTION_PLAN_PAGE_ID", "")
+
     message, commit_hash, author_time, commit_time, changed_files, remote_url = (
-        get_commit_info()
+        get_commit_info(commit_ref)
     )
     prefix, task_name = parse_commit_message(message)
     commit_url = build_commit_url(remote_url, commit_hash)
@@ -419,13 +585,14 @@ def main():
     priority = map_priority(prefix)
     files_summary, overflow_files = format_changed_files(changed_files)
 
-    create_notion_task(
+    return upsert_notion_task(
         token,
         tasks_db_id,
         project_page_id,
         plan_page_id,
         task_name,
         prefix,
+        commit_hash,
         commit_url,
         files_summary,
         overflow_files,
@@ -436,8 +603,34 @@ def main():
         prompt_text,
         vibe_tool,
         priority,
+        update_only=update_only,
     )
-    print(f"✅ Notion Tasks에 기록되었습니다: {task_name}")
+
+
+def main():
+    repo_root, commit_ref, update_only, backfill_refs = parse_args(sys.argv[1:])
+
+    env = load_env(repo_root)
+    token = env.get("NOTION_TOKEN", "")
+    tasks_db_id = env.get("NOTION_TASKS_DB_ID", "")
+    project_page_id = env.get("NOTION_PROJECT_PAGE_ID", "")
+
+    if not all([token, tasks_db_id, project_page_id]):
+        raise ValueError(
+            "NOTION_TOKEN, NOTION_TASKS_DB_ID, NOTION_PROJECT_PAGE_ID가 "
+            ".env에 모두 설정되어야 합니다."
+        )
+
+    env["NOTION_TOKEN"] = token
+    env["NOTION_TASKS_DB_ID"] = tasks_db_id
+    env["NOTION_PROJECT_PAGE_ID"] = project_page_id
+
+    refs = backfill_refs if backfill_refs else [commit_ref]
+
+    for ref in refs:
+        action, task_name = process_commit(repo_root, env, ref, update_only)
+        verb = "업데이트" if action == "updated" else "기록"
+        print(f"✅ Notion Tasks {verb} ({ref[:7]}): {task_name}")
 
 
 if __name__ == "__main__":
