@@ -1,6 +1,7 @@
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
 import { HeroSection } from "@/components/home/HeroSection";
+import { getLocalizedProducts } from "@/lib/promptData";
 import { getPrompts } from "@/lib/supabase/prompts";
 import { getLocale } from "next-intl/server";
 
@@ -48,8 +49,11 @@ function GridSkeleton() {
 }
 
 async function HomeGrid() {
+  const locale = await getLocale();
   const products = await getPrompts();
-  return <HomeFiltersAndGrid initialProducts={products} />;
+  return (
+    <HomeFiltersAndGrid initialProducts={getLocalizedProducts(products, locale)} />
+  );
 }
 
 async function HomeJsonLd() {

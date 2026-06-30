@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { PromptProduct } from "@/lib/promptData";
+import { useLocale } from "next-intl";
+import { getLocalizedProducts, type PromptProduct } from "@/lib/promptData";
 
 export function usePromptProducts(ids: string[]) {
+  const locale = useLocale();
   const [products, setProducts] = useState<PromptProduct[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -26,7 +28,7 @@ export function usePromptProducts(ids: string[]) {
       .then((res) => res.json())
       .then((data: { products?: PromptProduct[] }) => {
         if (!cancelled) {
-          setProducts(data.products ?? []);
+          setProducts(getLocalizedProducts(data.products ?? [], locale));
         }
       })
       .catch(() => {
@@ -39,7 +41,7 @@ export function usePromptProducts(ids: string[]) {
     return () => {
       cancelled = true;
     };
-  }, [idsKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [idsKey, locale]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return { products, isLoading };
 }

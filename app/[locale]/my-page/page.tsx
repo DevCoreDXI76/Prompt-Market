@@ -3,7 +3,8 @@
 import React from "react";
 import { useRouter } from "@/i18n/navigation";
 import { Link } from "@/i18n/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { getLocalizedTitle } from "@/lib/promptData";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { Calendar, ExternalLink, Compass, ShieldCheck } from "lucide-react";
@@ -11,6 +12,7 @@ import Image from "next/image";
 
 export default function MyPage() {
   const t = useTranslations("MyPage");
+  const locale = useLocale();
   const { user } = useAuth();
   const { purchases } = useCart();
   const router = useRouter();
@@ -63,7 +65,10 @@ export default function MyPage() {
           </div>
 
           <div className="divide-y divide-slate-100 rounded-3xl border border-slate-100 bg-white overflow-hidden shadow-sm dark:divide-zinc-800 dark:border-zinc-800 dark:bg-zinc-900">
-            {purchases.map((item, idx) => (
+            {purchases.map((item, idx) => {
+              const displayTitle = getLocalizedTitle(item.title, locale);
+
+              return (
               <div
                 key={item.id}
                 id={`purchase-item-${item.id}`}
@@ -74,7 +79,7 @@ export default function MyPage() {
                   <div className="relative h-14 w-18 overflow-hidden rounded-xl bg-slate-100 border shrink-0 dark:bg-zinc-800 dark:border-zinc-700">
                     <Image
                       src={item.image}
-                      alt={item.title}
+                      alt={displayTitle}
                       fill
                       sizes="72px"
                       className="object-cover"
@@ -84,7 +89,7 @@ export default function MyPage() {
 
                   <div className="min-w-0">
                     <h3 className="text-sm font-bold text-slate-800 truncate leading-snug dark:text-zinc-200">
-                      {item.title}
+                      {displayTitle}
                     </h3>
                     <div className="flex items-center gap-1.5 mt-1.5 text-[11px] font-medium text-slate-400 dark:text-zinc-500">
                       <Calendar className="h-3.5 w-3.5 shrink-0 text-slate-300 dark:text-zinc-600" />
@@ -104,7 +109,8 @@ export default function MyPage() {
                   </Link>
                 </div>
               </div>
-            ))}
+            );
+            })}
           </div>
 
           <p className="text-[11px] text-slate-400 text-center pt-2 dark:text-zinc-600">

@@ -15,25 +15,11 @@ export interface PromptProduct {
   salesCount: number;
 }
 
-export function getLocalizedProduct(product: PromptProduct, locale: string): PromptProduct {
-  if (locale !== "en") {
-    return product;
-  }
-
-  const staticRef = PROMPT_PRODUCTS.find((p) => p.id === product.id);
-  const titleEn = product.titleEn ?? staticRef?.titleEn;
-  const descriptionEn = product.descriptionEn ?? staticRef?.descriptionEn;
-
-  if (!titleEn || !descriptionEn) {
-    return product;
-  }
-
-  return {
-    ...product,
-    title: titleEn,
-    description: descriptionEn,
-  };
-}
+export {
+  getLocalizedProduct,
+  getLocalizedProducts,
+  getLocalizedTitle,
+} from "./promptLocalization";
 
 export const PROMPT_PRODUCTS: PromptProduct[] = [
   {

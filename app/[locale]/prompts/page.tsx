@@ -1,4 +1,5 @@
-import { getTranslations } from "next-intl/server";
+import { getLocalizedProducts } from "@/lib/promptData";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Sparkles } from "lucide-react";
 import {
   getPromptsPaginated,
@@ -18,6 +19,7 @@ interface PromptsPageProps {
 
 export default async function PromptsPage({ searchParams }: PromptsPageProps) {
   const t = await getTranslations("PromptsPage");
+  const locale = await getLocale();
   const params = await searchParams;
 
   const page = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
@@ -46,7 +48,7 @@ export default async function PromptsPage({ searchParams }: PromptsPageProps) {
       </div>
 
       <PromptsGrid
-        initialProducts={products}
+        initialProducts={getLocalizedProducts(products, locale)}
         total={total}
         page={page}
         totalPages={totalPages}
