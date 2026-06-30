@@ -28,6 +28,8 @@ export function LanguageSwitcher() {
           type="button"
           disabled={isPending}
           onClick={() => handleChange(l as Locale)}
+          aria-label={t(l as "ko" | "en")}
+          aria-pressed={locale === l}
           className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all ${
             locale === l
               ? "bg-white text-slate-900 shadow-sm dark:bg-zinc-700 dark:text-zinc-100"

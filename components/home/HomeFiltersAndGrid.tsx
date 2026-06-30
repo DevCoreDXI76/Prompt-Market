@@ -141,7 +141,7 @@ export function HomeFiltersAndGrid({ initialProducts }: HomeFiltersAndGridProps)
                     <div className="mt-auto pt-3 border-t border-slate-50 flex items-center justify-between dark:border-zinc-800">
                       <span className="text-xs text-slate-500 dark:text-zinc-500">{t("price")}</span>
                       <span className="font-sans font-bold text-base sm:text-lg text-slate-900 dark:text-zinc-100">
-                        {product.price.toLocaleString()}원
+                        {t("priceUnit", { price: product.price.toLocaleString() })}
                       </span>
                     </div>
 
@@ -159,6 +159,7 @@ export function HomeFiltersAndGrid({ initialProducts }: HomeFiltersAndGridProps)
                         id={`prompt-cart-add-${product.id}`}
                         onClick={() => addToCart(product.id)}
                         disabled={inCart}
+                        aria-label={inCart ? t("inCart") : t("addToCart")}
                         className={`flex items-center justify-center gap-1 rounded-xl px-3 py-2 text-xs font-semibold transition-all cursor-pointer ${
                           inCart
                             ? "bg-slate-100 text-slate-500 border border-slate-100 cursor-not-allowed dark:bg-zinc-800 dark:text-zinc-600 dark:border-zinc-700"

@@ -55,7 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clerkUser.fullName ??
       clerkUser.username ??
       primaryEmail.split("@")[0] ??
-      "사용자";
+      t("defaultNickname");
 
     fetch("/api/profile/upsert", {
       method: "POST",
@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }).catch((err) => {
       console.error("[AuthContext] profiles upsert failed:", err);
     });
-  }, [isLoaded, isSignedIn, clerkUser]);
+  }, [isLoaded, isSignedIn, clerkUser, t]);
 
   const user = useMemo<User | null>(() => {
     if (!isSignedIn || !clerkUser) return null;
@@ -79,12 +79,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clerkUser.fullName ??
         clerkUser.username ??
         primaryEmail.split("@")[0] ??
-        "사용자",
+        t("defaultNickname"),
       profileImage:
         clerkUser.imageUrl ??
         `https://picsum.photos/seed/${primaryEmail}/150/150`,
     };
-  }, [isSignedIn, clerkUser]);
+  }, [isSignedIn, clerkUser, t]);
 
   const login = useCallback(() => {
     router.push("/sign-in");

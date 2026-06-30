@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { PROMPT_PRODUCTS } from "@/lib/promptData";
 import { useToast } from "./ToastContext";
 import { useAuth, useSupabaseClient } from "./AuthContext";
 import { getCart, addCartItem, removeCartItem, removeCartItems } from "@/lib/supabase/carts";
@@ -176,16 +175,36 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // ── purchases ──────────────────────────────────────────────────────────────
 
   const addPurchases = useCallback(
-    (productIds: string[]) => {
+    async (productIds: string[]) => {
       const now = new Date();
       const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 
-      // 낙관적 UI 업데이트
+      let fetchedProducts: { id: string; title: string; images: string[]; price: number }[] = [];
+
+      try {
+        const res = await fetch("/api/prompts/by-ids", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ids: productIds }),
+        });
+        const data = await res.json();
+        fetchedProducts = (data.products ?? []).map(
+          (p: { id: string; title: string; images: string[]; price: number }) => ({
+            id: p.id,
+            title: p.title,
+            images: p.images,
+            price: p.price,
+          })
+        );
+      } catch {
+        fetchedProducts = [];
+      }
+
       setPurchases((prevPurchases) => {
         const newItems: PurchaseItem[] = [];
         productIds.forEach((id) => {
           if (prevPurchases.some((p) => p.id === id)) return;
-          const product = PROMPT_PRODUCTS.find((p) => p.id === id);
+          const product = fetchedProducts.find((p) => p.id === id);
           if (product) {
             newItems.push({
               id,
@@ -203,7 +222,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         return updated;
       });
 
-      // 장바구니에서 구매 완료 항목 제거
       setCart((prev) => prev.filter((id) => !productIds.includes(id)));
       if (user) {
         removeCartItems(supabase, user.id, productIds);
@@ -212,7 +230,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem(CART_KEY, JSON.stringify(updated));
       }
 
-      // Supabase INSERT 완료 대기 후 최신 데이터로 동기화
       if (user) {
         setTimeout(() => {
           refreshPurchases();

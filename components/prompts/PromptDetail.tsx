@@ -167,6 +167,7 @@ export function PromptDetail({ product }: PromptDetailProps) {
                       <button
                         id="copy-prompt-btn"
                         onClick={handleCopy}
+                        aria-label={copied ? t("copied") : t("copy")}
                         className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-all cursor-pointer"
                       >
                         {copied ? (
@@ -203,6 +204,7 @@ export function PromptDetail({ product }: PromptDetailProps) {
                       id="details-add-to-cart-btn"
                       onClick={() => addToCart(product.id)}
                       disabled={inCart}
+                      aria-label={inCart ? t("inCart") : t("addToCart")}
                       className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition-all border cursor-pointer ${
                         inCart
                           ? "bg-slate-100 text-slate-400 border-slate-100 cursor-not-allowed"
@@ -216,6 +218,7 @@ export function PromptDetail({ product }: PromptDetailProps) {
                     <button
                       id="details-buy-now-btn"
                       onClick={handleDirectBuy}
+                      aria-label={t("buyNow")}
                       className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-900/10 hover:bg-slate-800 active:scale-[0.98] transition-all cursor-pointer"
                     >
                       <CreditCard className="h-4 w-4 text-slate-400" />

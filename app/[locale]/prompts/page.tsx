@@ -1,11 +1,37 @@
 import { getTranslations } from "next-intl/server";
 import { Sparkles } from "lucide-react";
-import { getPrompts } from "@/lib/supabase/prompts";
+import {
+  getPromptsPaginated,
+  DEFAULT_PROMPTS_PAGE_SIZE,
+  type PromptSortOption,
+} from "@/lib/supabase/prompts";
 import { PromptsGrid } from "@/components/prompts/PromptsGrid";
 
-export default async function PromptsPage() {
+interface PromptsPageProps {
+  searchParams: Promise<{
+    page?: string;
+    category?: string;
+    sort?: string;
+    q?: string;
+  }>;
+}
+
+export default async function PromptsPage({ searchParams }: PromptsPageProps) {
   const t = await getTranslations("PromptsPage");
-  const products = await getPrompts();
+  const params = await searchParams;
+
+  const page = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
+  const category = params.category ?? "All";
+  const sort = (params.sort as PromptSortOption) ?? "popular";
+  const search = params.q ?? "";
+
+  const { products, total, totalPages } = await getPromptsPaginated({
+    page,
+    pageSize: DEFAULT_PROMPTS_PAGE_SIZE,
+    category,
+    search,
+    sort,
+  });
 
   return (
     <div id="prompts-page-container" className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 flex-grow">
@@ -19,7 +45,15 @@ export default async function PromptsPage() {
         </p>
       </div>
 
-      <PromptsGrid initialProducts={products} />
+      <PromptsGrid
+        initialProducts={products}
+        total={total}
+        page={page}
+        totalPages={totalPages}
+        initialCategory={category}
+        initialSort={sort}
+        initialSearch={search}
+      />
     </div>
   );
 }

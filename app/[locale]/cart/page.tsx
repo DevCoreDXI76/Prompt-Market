@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { useToast } from "@/context/ToastContext";
-import { PROMPT_PRODUCTS } from "@/lib/promptData";
+import { usePromptProducts } from "@/hooks/usePromptProducts";
 import { Trash2, ShoppingBag, ArrowRight, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 
@@ -34,9 +34,7 @@ export default function CartPage() {
     }, ANIMATION_DELAY_MS);
   };
 
-  const cartItems = cart
-    .map((id) => PROMPT_PRODUCTS.find((p) => p.id === id))
-    .filter((p): p is (typeof PROMPT_PRODUCTS)[0] => !!p);
+  const { products: cartItems } = usePromptProducts(cart);
 
   const totalPrice = cartItems.reduce((sum, item) => sum + item.price, 0);
 
@@ -118,7 +116,7 @@ export default function CartPage() {
                         </Link>
                       </h3>
                       <p className="text-xs sm:text-sm font-bold text-slate-900 font-sans mt-0.5 dark:text-zinc-100">
-                        {item.price.toLocaleString()}원
+                        {t("priceUnit", { price: item.price.toLocaleString() })}
                       </p>
                     </div>
 
@@ -146,7 +144,7 @@ export default function CartPage() {
                 <div className="flex justify-between text-slate-500 dark:text-zinc-400">
                   <span>{t("subtotal")}</span>
                   <span className="font-semibold font-sans text-slate-800 dark:text-zinc-200">
-                    {totalPrice.toLocaleString()}원
+                    {t("priceUnit", { price: totalPrice.toLocaleString() })}
                   </span>
                 </div>
                 <div className="flex justify-between text-slate-500 dark:text-zinc-400">
@@ -157,7 +155,7 @@ export default function CartPage() {
                 <div className="flex justify-between items-center pt-2">
                   <span className="font-semibold text-slate-800 dark:text-zinc-200">{t("total")}</span>
                   <span className="font-sans font-bold text-lg sm:text-xl text-indigo-600 dark:text-indigo-400">
-                    {totalPrice.toLocaleString()}원
+                    {t("priceUnit", { price: totalPrice.toLocaleString() })}
                   </span>
                 </div>
               </div>

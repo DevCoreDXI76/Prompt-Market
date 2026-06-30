@@ -73,7 +73,7 @@ export function PaymentModal({ isOpen, totalPrice, onSuccess, onClose }: Payment
             <>
               <div className="text-center space-y-1">
                 <p className="text-xs text-slate-400 font-medium">{t("mockPayment")}</p>
-                <p className="text-2xl font-bold font-mono text-slate-900">{totalPrice.toLocaleString()}원</p>
+                <p className="text-2xl font-bold font-mono text-slate-900">{t("priceUnit", { price: totalPrice.toLocaleString() })}</p>
               </div>
 
               <hr className="border-slate-100" />

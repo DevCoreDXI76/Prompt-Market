@@ -75,6 +75,8 @@ export function HeaderAuth() {
           onClick={() => setDropdownOpen((v) => !v)}
           className="flex items-center gap-2 rounded-xl px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-all"
           aria-label={t("profileMenuAriaLabel")}
+          aria-expanded={dropdownOpen}
+          aria-haspopup="menu"
         >
           {user.profileImage ? (
             <Image
@@ -96,7 +98,10 @@ export function HeaderAuth() {
         </button>
 
         {dropdownOpen && (
-          <div className="absolute right-0 mt-2 w-48 rounded-2xl bg-white dark:bg-zinc-900 shadow-lg border border-slate-100 dark:border-zinc-800 py-1 z-50">
+          <div
+            role="menu"
+            className="absolute right-0 mt-2 w-48 rounded-2xl bg-white dark:bg-zinc-900 shadow-lg border border-slate-100 dark:border-zinc-800 py-1 z-50"
+          >
             <Link
               href="/profile"
               onClick={() => setDropdownOpen(false)}

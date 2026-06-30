@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { loadTossPayments, ANONYMOUS } from "@tosspayments/tosspayments-sdk";
 import { useUser } from "@clerk/nextjs";
 import { useCart } from "@/context/CartContext";
-import { PROMPT_PRODUCTS } from "@/lib/promptData";
+import { usePromptProducts } from "@/hooks/usePromptProducts";
 import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { ArrowLeft, ShieldCheck, Lock } from "lucide-react";
@@ -36,9 +36,7 @@ export default function CheckoutPage() {
   const productIds =
     orderType === "direct" && productId ? [productId] : cart;
 
-  const products = productIds
-    .map((id) => PROMPT_PRODUCTS.find((p) => p.id === id))
-    .filter((p): p is (typeof PROMPT_PRODUCTS)[number] => Boolean(p));
+  const { products } = usePromptProducts(productIds);
 
   const totalAmount = products.reduce((sum, p) => sum + p.price, 0);
 
@@ -47,7 +45,7 @@ export default function CheckoutPage() {
       ? t("defaultPromptName")
       : products.length === 1
       ? products[0].title
-      : `${products[0].title} 외 ${products.length - 1}건`;
+      : t("orderNameMultiple", { title: products[0].title, count: products.length - 1 });
 
   const [orderId] = useState<string>(generateOrderId);
   const [widgets, setWidgets] = useState<TossWidgets | null>(null);

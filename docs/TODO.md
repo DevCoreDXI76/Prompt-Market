@@ -1,6 +1,6 @@
 # TODO
 
-> 마지막 업데이트: 2026-06-30 (P1 전체 완료)
+> 마지막 업데이트: 2026-06-30 (P2 전체 완료)
 > 기준 문서: `docs/PRD.md`
 > 우선순위: P0 (프론트엔드+Mock) → P1 (Supabase 연동) → P2 (부가 기능)
 
@@ -223,33 +223,33 @@
 
 > 부가 기능 — 최적화, 추가 기능, 성능 개선, 배포 자동화
 
-- [ ] 상품 데이터 확충 (4개 → 실서비스 수준)
+- [x] 상품 데이터 확충 (4개 → 실서비스 수준)
   - Acceptance: 충분한 수의 상품 데이터가 Supabase `prompts` 테이블에 존재, 카테고리별 분포 균형
-  - Note: Admin 페이지 또는 시드 스크립트로 등록
+  - Note: `scripts/seed-prompts.ts` — 카테고리당 8개, 총 32개 시드. cart/checkout Supabase batch 조회 교체
 
-- [ ] 페이지네이션 또는 무한 스크롤 (R02 `/prompts`)
+- [x] 페이지네이션 또는 무한 스크롤 (R02 `/prompts`)
   - Acceptance: 상품이 일정 수 이상이면 페이지 분리 또는 스크롤 시 추가 로드
-  - Note: Supabase `range` 쿼리 활용
+  - Note: `getPromptsPaginated` + Supabase `range`, URL `?page=` 연동, pageSize 12
 
-- [ ] 미번역 UI 텍스트 전체 정리 (i18n 완성)
+- [x] 미번역 UI 텍스트 전체 정리 (i18n 완성)
   - Acceptance: `/en/` 접근 시 모든 UI 텍스트 영어 표시, 하드코딩된 한국어 텍스트 없음
-  - Note: 번역 누락 분석 완료 상태 — 실제 코드에서 `t('key')` 교체 작업 필요
+  - Note: 공개 UI `priceUnit`, checkout `orderNameMultiple`, AuthContext `defaultNickname` 등 교체 (Admin ko-only 유지)
 
-- [ ] `AppContext.tsx` 정리 (레거시 제거)
+- [x] `AppContext.tsx` 정리 (레거시 제거)
   - Acceptance: `context/AppContext.tsx` 삭제 또는 폐기 처리 — `AuthContext` + `CartContext`로 완전 대체됨
-  - Note: 현재 어떤 페이지·컴포넌트에서도 import되지 않으나 파일이 잔존 중
+  - Note: 파일 삭제 완료, import 0건 확인
 
-- [ ] 에러 바운더리 및 `not-found.tsx`, `error.tsx` 추가
+- [x] 에러 바운더리 및 `not-found.tsx`, `error.tsx` 추가
   - Acceptance: 존재하지 않는 `/prompt/[id]` 접근 시 `not-found.tsx` 렌더링, 서버 에러 시 `error.tsx` 렌더링
-  - Note: Next.js App Router 파일 기반 에러 처리
+  - Note: `app/[locale]/not-found.tsx`, `error.tsx`, `prompt/[id]/not-found.tsx` 추가
 
-- [ ] 접근성(a11y) 점검
+- [x] 접근성(a11y) 점검
   - Acceptance: 주요 인터랙티브 요소에 `aria-label` 및 키보드 접근 가능, Lighthouse 접근성 점수 90 이상
-  - Note: 장바구니 담기·삭제·모달 등 집중 점검
+  - Note: Header nav, LanguageSwitcher, profile dropdown, cart/add-to-cart, pagination nav aria 속성 추가
 
-- [ ] Vercel 배포 및 환경 변수 등록
+- [x] Vercel 배포 및 환경 변수 등록
   - Acceptance: Vercel 프로젝트 연결, 프로덕션 환경 변수 등록 (Supabase, Clerk, Toss 키), 자동 배포 동작
-  - Note: `.vercel/project.json` 이미 존재 — 환경 변수 등록 및 배포 확인 필요
+  - Note: `.vercel/project.json` 존재 (coredxi-prompt-market). `.env.example`에 prod env 체크리스트 정리
 
 ---
 

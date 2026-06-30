@@ -38,7 +38,7 @@ export default function Header() {
           </Link>
         </div>
 
-        <nav id="header-nav" className="flex items-center gap-3">
+        <nav id="header-nav" className="flex items-center gap-3" aria-label={t("mainNav")}>
           <LanguageSwitcher />
           <ModeToggle />
           <HeaderAuth />

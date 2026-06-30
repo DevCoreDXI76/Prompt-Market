@@ -28,7 +28,8 @@
     }
   },
   "Header": {
-    "prompts": "프롬프트"
+    "prompts": "프롬프트",
+    "mainNav": "주요 내비게이션"
   },
   "Footer": {
     "copyright": "© {year} Prompt Market. Powered by Google AI Studio."
@@ -64,7 +65,8 @@
     "addToCart": "담기",
     "inCart": "장바구니에 있음",
     "noResults": "검색 결과에 맞는 프롬프트가 없습니다.",
-    "noResultsHint": "다른 키워드나 태그를 입력해 보세요."
+    "noResultsHint": "다른 키워드나 태그를 입력해 보세요.",
+    "priceUnit": "{price}원"
   },
   "PromptsPage": {
     "title": "전체 프롬프트 마켓",
@@ -85,7 +87,12 @@
     "inCart": "장바구니",
     "salesCount": "누적 판매 {count}+",
     "price": "판매가",
-    "promptList": "프롬프트 목록"
+    "priceUnit": "{price}원",
+    "promptList": "프롬프트 목록",
+    "paginationLabel": "프롬프트 목록 페이지네이션",
+    "prevPage": "이전",
+    "nextPage": "다음",
+    "pageInfo": "{page} / {totalPages} 페이지"
   },
   "PromptDetailPage": {
     "notFound": "프롬프트를 찾는 중입니다...",
@@ -151,7 +158,8 @@
     "bankFee": "수수료 없음",
     "agreePrivacy": "개인정보 제공 동의 (필수)",
     "agreeTerms": "전자결제대행 이용약관 동의 (필수)",
-    "payButton": "{price}원 결제하기"
+    "payButton": "{price}원 결제하기",
+    "priceUnit": "{price}원"
   },
   "LoginPage": {
     "loginTitle": "Prompt Market 로그인",
@@ -207,7 +215,8 @@
   "AuthContext": {
     "loggedOut": "로그아웃되었습니다.",
     "profileSaved": "프로필이 저장되었습니다.",
-    "profileSaveFailed": "프로필 저장에 실패했습니다."
+    "profileSaveFailed": "프로필 저장에 실패했습니다.",
+    "defaultNickname": "사용자"
   },
   "ModeToggle": {
     "light": "라이트",
@@ -230,7 +239,8 @@
     "payButton": "{price}원 결제하기",
     "priceUnit": "{price}원",
     "testModeNotice": "테스트 결제 모드입니다. 실제 결제는 이루어지지 않습니다. 토스페이먼츠 샌드박스 환경에서 안전하게 결제를 체험하세요.",
-    "defaultPromptName": "프롬프트"
+    "defaultPromptName": "프롬프트",
+    "orderNameMultiple": "{title} 외 {count}건"
   },
   "CheckoutSuccess": {
     "loadingTitle": "결제를 승인하는 중입니다",
@@ -256,5 +266,19 @@
     "errorCode": "오류 코드: {code}",
     "backToCart": "장바구니로",
     "retry": "다시 결제하기"
+  },
+  "NotFoundPage": {
+    "title": "페이지를 찾을 수 없습니다",
+    "description": "요청하신 페이지가 존재하지 않거나 이동되었습니다.",
+    "backHome": "홈으로 돌아가기",
+    "browsePrompts": "프롬프트 둘러보기",
+    "promptTitle": "프롬프트를 찾을 수 없습니다",
+    "promptDescription": "해당 상품이 존재하지 않거나 삭제되었습니다."
+  },
+  "ErrorPage": {
+    "title": "문제가 발생했습니다",
+    "description": "일시적인 오류가 발생했습니다. 다시 시도하거나 홈으로 이동해 주세요.",
+    "retry": "다시 시도",
+    "backHome": "홈으로 돌아가기"
   }
 }

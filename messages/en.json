@@ -28,7 +28,8 @@
     }
   },
   "Header": {
-    "prompts": "Prompts"
+    "prompts": "Prompts",
+    "mainNav": "Main navigation"
   },
   "Footer": {
     "copyright": "© {year} Prompt Market. Powered by Google AI Studio."
@@ -64,7 +65,8 @@
     "addToCart": "Add to Cart",
     "inCart": "In Cart",
     "noResults": "No prompts match your search.",
-    "noResultsHint": "Try different keywords or tags."
+    "noResultsHint": "Try different keywords or tags.",
+    "priceUnit": "₩{price}"
   },
   "PromptsPage": {
     "title": "All Prompt Market",
@@ -85,7 +87,12 @@
     "inCart": "In Cart",
     "salesCount": "{count}+ sales",
     "price": "Price",
-    "promptList": "Prompt List"
+    "priceUnit": "₩{price}",
+    "promptList": "Prompt List",
+    "paginationLabel": "Prompt list pagination",
+    "prevPage": "Previous",
+    "nextPage": "Next",
+    "pageInfo": "Page {page} of {totalPages}"
   },
   "PromptDetailPage": {
     "notFound": "Looking for this prompt...",
@@ -151,7 +158,8 @@
     "bankFee": "No fee",
     "agreePrivacy": "Agree to Privacy Policy (Required)",
     "agreeTerms": "Agree to Payment Terms (Required)",
-    "payButton": "Pay ₩{price}"
+    "payButton": "Pay ₩{price}",
+    "priceUnit": "₩{price}"
   },
   "LoginPage": {
     "loginTitle": "Sign in to Prompt Market",
@@ -207,7 +215,8 @@
   "AuthContext": {
     "loggedOut": "You have been logged out.",
     "profileSaved": "Profile saved.",
-    "profileSaveFailed": "Failed to save profile."
+    "profileSaveFailed": "Failed to save profile.",
+    "defaultNickname": "User"
   },
   "ModeToggle": {
     "light": "Light",
@@ -230,7 +239,8 @@
     "payButton": "Pay ₩{price}",
     "priceUnit": "₩{price}",
     "testModeNotice": "This is test payment mode. No actual charges will be made. Try the payment safely in the TossPayments sandbox environment.",
-    "defaultPromptName": "Prompt"
+    "defaultPromptName": "Prompt",
+    "orderNameMultiple": "{title} and {count} more"
   },
   "CheckoutSuccess": {
     "loadingTitle": "Confirming your payment",
@@ -256,5 +266,19 @@
     "errorCode": "Error code: {code}",
     "backToCart": "Back to Cart",
     "retry": "Try Again"
+  },
+  "NotFoundPage": {
+    "title": "Page Not Found",
+    "description": "The page you requested does not exist or has been moved.",
+    "backHome": "Back to Home",
+    "browsePrompts": "Browse Prompts",
+    "promptTitle": "Prompt Not Found",
+    "promptDescription": "This product does not exist or has been removed."
+  },
+  "ErrorPage": {
+    "title": "Something Went Wrong",
+    "description": "A temporary error occurred. Please try again or return home.",
+    "retry": "Try Again",
+    "backHome": "Back to Home"
   }
 }

@@ -58,17 +58,146 @@ function productToRow(
 
 // ─── Public Read ──────────────────────────────────────────────
 
+export type PromptSortOption = "popular" | "rating" | "price-asc" | "price-desc";
+
+export interface GetPromptsPaginatedOptions {
+  page?: number;
+  pageSize?: number;
+  category?: string;
+  search?: string;
+  sort?: PromptSortOption;
+}
+
+export interface PaginatedPromptsResult {
+  products: PromptProduct[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export const DEFAULT_PROMPTS_PAGE_SIZE = 12;
+
+function getSortConfig(sort: PromptSortOption): { column: string; ascending: boolean } {
+  switch (sort) {
+    case "rating":
+      return { column: "rating", ascending: false };
+    case "price-asc":
+      return { column: "price", ascending: true };
+    case "price-desc":
+      return { column: "price", ascending: false };
+    default:
+      return { column: "sales_count", ascending: false };
+  }
+}
+
+function paginateStaticProducts(
+  products: PromptProduct[],
+  page: number,
+  pageSize: number
+): PaginatedPromptsResult {
+  const total = products.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const safePage = Math.min(Math.max(1, page), totalPages);
+  const from = (safePage - 1) * pageSize;
+  return {
+    products: products.slice(from, from + pageSize),
+    total,
+    page: safePage,
+    pageSize,
+    totalPages,
+  };
+}
+
+/**
+ * 페이지네이션 프롬프트 목록 조회 (Supabase range)
+ */
+export async function getPromptsPaginated(
+  options: GetPromptsPaginatedOptions = {}
+): Promise<PaginatedPromptsResult> {
+  const page = Math.max(1, options.page ?? 1);
+  const pageSize = options.pageSize ?? DEFAULT_PROMPTS_PAGE_SIZE;
+  const sort = options.sort ?? "popular";
+  const { column, ascending } = getSortConfig(sort);
+
+  try {
+    const supabase = createPublicClient();
+    let query = supabase.from("prompts").select("*", { count: "exact" });
+
+    if (options.category && options.category !== "All") {
+      query = query.eq("category", options.category);
+    }
+
+    if (options.search?.trim()) {
+      const term = options.search.trim();
+      query = query.or(
+        `title.ilike.%${term}%,description.ilike.%${term}%,author.ilike.%${term}%`
+      );
+    }
+
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    const { data, error, count } = await query.order(column, { ascending }).range(from, to);
+
+    if (error || !data) {
+      console.error("[Supabase] getPromptsPaginated 오류, 정적 데이터 폴백:", error?.message);
+      let filtered = [...PROMPT_PRODUCTS];
+      if (options.category && options.category !== "All") {
+        filtered = filtered.filter((p) => p.category === options.category);
+      }
+      if (options.search?.trim()) {
+        const q = options.search.trim().toLowerCase();
+        filtered = filtered.filter(
+          (p) =>
+            p.title.toLowerCase().includes(q) ||
+            p.description.toLowerCase().includes(q) ||
+            p.author.toLowerCase().includes(q) ||
+            p.tags.some((tag) => tag.toLowerCase().includes(q))
+        );
+      }
+      filtered.sort((a, b) => {
+        if (sort === "rating") return b.rating - a.rating;
+        if (sort === "price-asc") return a.price - b.price;
+        if (sort === "price-desc") return b.price - a.price;
+        return b.salesCount - a.salesCount;
+      });
+      return paginateStaticProducts(filtered, page, pageSize);
+    }
+
+    const total = count ?? data.length;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+    return {
+      products: data.map((row) => rowToProduct(row as PromptRow)),
+      total,
+      page: Math.min(page, totalPages),
+      pageSize,
+      totalPages,
+    };
+  } catch (err) {
+    console.error("[Supabase] getPromptsPaginated 예외, 정적 데이터 폴백:", err);
+    return paginateStaticProducts(PROMPT_PRODUCTS, page, pageSize);
+  }
+}
+
 /**
  * 전체 프롬프트 목록 조회 (판매수 내림차순)
  * Supabase 오류 시 정적 더미 데이터 폴백
  */
-export async function getPrompts(): Promise<PromptProduct[]> {
+export async function getPrompts(options?: { limit?: number }): Promise<PromptProduct[]> {
   try {
     const supabase = createPublicClient();
-    const { data, error } = await supabase
+    let query = supabase
       .from("prompts")
       .select("*")
       .order("sales_count", { ascending: false });
+
+    if (options?.limit) {
+      query = query.limit(options.limit);
+    }
+
+    const { data, error } = await query;
 
     if (error || !data) {
       console.error("[Supabase] getPrompts 오류, 정적 데이터 폴백:", error?.message);
@@ -79,6 +208,39 @@ export async function getPrompts(): Promise<PromptProduct[]> {
   } catch (err) {
     console.error("[Supabase] getPrompts 예외, 정적 데이터 폴백:", err);
     return PROMPT_PRODUCTS;
+  }
+}
+
+/**
+ * ID 목록으로 프롬프트 batch 조회 (장바구니·결제용)
+ * Supabase 오류 시 정적 더미 데이터 폴백
+ */
+export async function getPromptsByIds(ids: string[]): Promise<PromptProduct[]> {
+  if (ids.length === 0) return [];
+
+  try {
+    const supabase = createPublicClient();
+    const { data, error } = await supabase
+      .from("prompts")
+      .select("*")
+      .in("id", ids);
+
+    if (error || !data) {
+      console.error("[Supabase] getPromptsByIds 오류, 정적 데이터 폴백:", error?.message);
+      return ids
+        .map((id) => PROMPT_PRODUCTS.find((p) => p.id === id))
+        .filter((p): p is PromptProduct => !!p);
+    }
+
+    const byId = new Map(data.map((row) => [row.id, rowToProduct(row as PromptRow)]));
+    return ids
+      .map((id) => byId.get(id) ?? PROMPT_PRODUCTS.find((p) => p.id === id))
+      .filter((p): p is PromptProduct => !!p);
+  } catch (err) {
+    console.error("[Supabase] getPromptsByIds 예외, 정적 데이터 폴백:", err);
+    return ids
+      .map((id) => PROMPT_PRODUCTS.find((p) => p.id === id))
+      .filter((p): p is PromptProduct => !!p);
   }
 }
 
