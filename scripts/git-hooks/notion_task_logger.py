@@ -194,18 +194,71 @@ def extract_prompt(message: str, env: dict) -> str:
     return ""
 
 
-def detect_vibe_tool(message: str, env: dict) -> str:
-    override = os.environ.get("VIBE_CODING_TOOL") or env.get("VIBE_CODING_TOOL", "")
-    if override in VALID_TOOLS:
-        return override
+def latest_mtime_in_dir(dir_path: Path) -> Optional[float]:
+    if not dir_path.is_dir():
+        return None
 
-    lower_msg = message.lower()
-    if "co-authored-by: cursor" in lower_msg:
-        return "Cursor"
-    if "co-authored-by: claude" in lower_msg:
+    latest = None
+    try:
+        for root, _, files in os.walk(dir_path):
+            for name in files:
+                try:
+                    mtime = (Path(root) / name).stat().st_mtime
+                    if latest is None or mtime > latest:
+                        latest = mtime
+                except OSError:
+                    continue
+    except OSError:
+        return None
+
+    return latest
+
+
+def collect_tool_mtimes(repo_root: str) -> tuple[Optional[float], Optional[float]]:
+    search_roots = [Path(repo_root), Path.home()]
+    claude_times: list[float] = []
+    cursor_times: list[float] = []
+
+    for root in search_roots:
+        claude_mtime = latest_mtime_in_dir(root / ".claude")
+        if claude_mtime is not None:
+            claude_times.append(claude_mtime)
+
+        cursor_mtime = latest_mtime_in_dir(root / ".cursor")
+        if cursor_mtime is not None:
+            cursor_times.append(cursor_mtime)
+
+    claude_latest = max(claude_times) if claude_times else None
+    cursor_latest = max(cursor_times) if cursor_times else None
+    return claude_latest, cursor_latest
+
+
+def detect_vibe_tool_auto(repo_root: str) -> str:
+    """`.claude` / `.cursor` 폴더 최근 수정 시각으로 사용 도구를 추정합니다."""
+    claude_mtime, cursor_mtime = collect_tool_mtimes(repo_root)
+
+    if claude_mtime is None and cursor_mtime is None:
+        return "기타"
+    if claude_mtime is not None and cursor_mtime is None:
         return "Claude Code"
+    if cursor_mtime is not None and claude_mtime is None:
+        return "Cursor"
 
-    return "기타"
+    if abs(claude_mtime - cursor_mtime) <= 60:
+        return "기타"
+
+    return "Claude Code" if claude_mtime > cursor_mtime else "Cursor"
+
+
+def detect_vibe_tool(message: str, env: dict, repo_root: str) -> str:
+    env_override = os.environ.get("VIBE_CODING_TOOL", "").strip()
+    if not env_override:
+        env_override = env.get("VIBE_CODING_TOOL", "").strip()
+
+    if env_override in VALID_TOOLS:
+        return env_override
+
+    return detect_vibe_tool_auto(repo_root)
 
 
 def map_priority(prefix: str) -> str:
@@ -578,7 +631,7 @@ def process_commit(
     )
     prefix, task_name = parse_commit_message(message)
     commit_url = build_commit_url(remote_url, commit_hash)
-    vibe_tool = detect_vibe_tool(message, env)
+    vibe_tool = detect_vibe_tool(message, env, repo_root)
     lessons = extract_lessons_learned(message)
     test_result = extract_test_plan(message)
     prompt_text = extract_prompt(message, env)

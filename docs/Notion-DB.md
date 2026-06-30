@@ -136,7 +136,7 @@ pnpm hooks:install
 | 우선순위 | prefix 매핑 (`fix→높음`, `feat→보통`, `chore→낮음` 등) |
 | 테스트 결과 | 본문 `Test plan:` 섹션, 없으면 기본 문구 |
 | 프롬프트 원문 | `NOTION_PROMPT` 또는 본문 `Prompt:` / `프롬프트:` |
-| 사용 도구 | `VIBE_CODING_TOOL` 또는 `Co-authored-by: Cursor` |
+| 사용 도구 | `VIBE_CODING_TOOL`(수동 우선) 또는 `.claude`/`.cursor` 폴더 최근 수정 시각 자동 감지 |
 | 상태 | `완료` |
 
 ### 커밋 메시지 작성 팁
