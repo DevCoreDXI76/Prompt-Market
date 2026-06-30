@@ -1,6 +1,6 @@
 # TODO
 
-> 마지막 업데이트: 2026-06-29
+> 마지막 업데이트: 2026-06-30 (P1 백엔드 마이그레이션 완료)
 > 기준 문서: `docs/PRD.md`
 > 우선순위: P0 (프론트엔드+Mock) → P1 (Supabase 연동) → P2 (부가 기능)
 
@@ -82,13 +82,13 @@
   - Acceptance: `prompts` 테이블 생성, 읽기는 public, 쓰기는 service_role(admin)만 허용
   - Note: `category`, `tags`, `author`, `rating`, `views`, `sales_count` 등 전체 필드 포함
 
-- [ ] `profiles`, `carts`, `purchases` 테이블 생성
+- [x] `profiles`, `carts`, `purchases` 테이블 생성
   - Acceptance: PRD 4.4 스키마에 맞게 3개 테이블 생성됨, `carts`의 `unique(user_id, prompt_id)` 제약 포함
-  - Note: 추후 Supabase SQL 에디터에서 적용
+  - Note: Supabase MCP `apply_migration`으로 생성, user_id/buyer_id는 Clerk user ID(text) 사용, RLS 정책 설정 완료
 
 - [ ] `profiles` 자동 생성 트리거
   - Acceptance: Clerk 신규 사용자 등록 시 또는 첫 로그인 시 `profiles` 레코드 자동 생성
-  - Note: Clerk Webhook 또는 Supabase Trigger 활용
+  - Note: Clerk Webhook 또는 AuthContext의 upsert 패턴 활용 예정
 
 ### 인증 (Clerk)
 
@@ -133,19 +133,19 @@
 
 ### 장바구니 마이그레이션 (R04)
 
-- [ ] `pm_cart` localStorage → Supabase `carts` 테이블로 교체
+- [x] `pm_cart` localStorage → Supabase `carts` 테이블로 교체
   - Acceptance: 로그인 사용자의 장바구니가 Supabase에 저장·조회됨, 중복 담기 방지(`unique` 제약) 동작
-  - Note: 기존 `CartContext`의 `addToCart`·`removeFromCart` 로직을 Supabase CRUD로 교체
+  - Note: `lib/supabase/carts.ts` 생성, `CartContext` 내 `addToCart`/`removeFromCart` Supabase 연동, 비로그인 localStorage fallback 유지
 
-- [ ] 로그인 사용자 기준 장바구니 CRUD API
-  - Acceptance: 담기·삭제·목록 조회 API(서버 액션 또는 Route Handler)가 RLS 통과 후 동작
-  - Note: 비로그인 상태 장바구니는 로그인 시 병합 처리(선택)
+- [x] 로그인 사용자 기준 장바구니 CRUD API
+  - Acceptance: 담기·삭제·목록 조회가 RLS 통과 후 동작
+  - Note: `useSupabaseClient()` (Clerk JWT 주입) 클라이언트로 직접 CRUD 수행
 
 ### 구매 내역 마이그레이션 (R07)
 
-- [ ] `pm_purchases` localStorage → Supabase `purchases` 테이블로 교체
+- [x] `pm_purchases` localStorage → Supabase `purchases` 테이블로 교체
   - Acceptance: 구매 내역이 Supabase에 저장됨, R07 `/my-page`가 Supabase 데이터 기준으로 렌더링
-  - Note: 결제 승인 성공 후 `purchases` INSERT 연동 필요
+  - Note: `CartContext`의 `refreshPurchases`가 Supabase에서 읽음, 비로그인 localStorage fallback 유지
 
 ### 실결제 (Checkout, R03)
 
@@ -165,13 +165,13 @@
   - Acceptance: `/checkout/success`, `/checkout/fail` 페이지에서 결과 표시
   - Note: `app/[locale]/checkout/success/page.tsx`, `app/[locale]/checkout/fail/page.tsx`
 
-- [ ] 결제 성공 시 `purchases` 테이블 INSERT 연동
+- [x] 결제 성공 시 `purchases` 테이블 INSERT 연동
   - Acceptance: 결제 승인 성공 후 `purchases` 테이블에 구매 내역 저장, `/my-page`에 반영
-  - Note: 현재 결제 성공 후 localStorage `pm_purchases`에만 저장됨 → Supabase 연동 필요
+  - Note: `/api/payment/confirm/route.ts`에서 Toss 승인 후 `createAdminSupabaseClient()`로 INSERT, `checkout/success`에서 `productIds`를 body에 포함해 전달
 
-- [ ] 바로 구매 단건 결제 (R03)
+- [x] 바로 구매 단건 결제 (R03)
   - Acceptance: R03 상세 페이지에서 "바로 구매" 클릭 시 Checkout 페이지로 이동, 단건 결제 처리
-  - Note: 현재 AS-IS 즉시 처리 방식 → 토스페이먼츠 결제창 호출로 교체 예정
+  - Note: `PromptDetail.tsx`의 `handleDirectBuy`가 `/checkout?type=direct&productId=...`로 라우팅, Checkout 페이지에서 `type=direct` 처리
 
 ### i18n 다국어 (next-intl)
 
@@ -187,9 +187,9 @@
   - Acceptance: 헤더에 언어 전환 버튼 표시, 클릭 시 로케일 전환 동작
   - Note: `components/LanguageSwitcher.tsx`
 
-- [ ] 미번역 UI 텍스트 정리
-  - Acceptance: 모든 페이지의 하드코딩된 한국어 텍스트를 번역 키로 교체, `/en/` 접근 시 영어 표시
-  - Note: 번역 누락 분석 완료, 실제 키 교체 작업 남아있음
+- [x] 미번역 UI 텍스트 정리 (checkout 3개 페이지)
+  - Acceptance: checkout success·fail·page의 하드코딩 한국어 제거, `/en/` 접근 시 영어 표시
+  - Note: `CheckoutPage`, `CheckoutSuccess`, `CheckoutFail` 번역 네임스페이스 추가, `messages/ko.json` + `messages/en.json` 업데이트 완료
 
 ### 다크 모드
 
@@ -209,13 +209,13 @@
 
 ### 프로필 마이그레이션 (R06)
 
-- [ ] 프로필 이미지 base64 → Supabase Storage 업로드로 교체
-  - Acceptance: 아바타 변경 시 Storage에 업로드, `profiles.avatar_url`에 Storage URL 저장
-  - Note: 현재 `pm_user` localStorage base64 방식 사용 중
+- [ ] 프로필 이미지 Supabase Storage 업로드로 교체
+  - Acceptance: 아바타 변경 시 Supabase Storage에 업로드, `profiles.avatar_url`에 Storage URL 저장
+  - Note: 현재 `AuthContext.tsx`에서 `clerkUser.setProfileImage({ file })` — Clerk 네이티브 CDN 업로드 방식으로 동작 중. Supabase Storage(`prompts` 버킷 또는 `avatars` 버킷) 연동으로 교체 필요
 
 - [ ] 닉네임·아바타 변경을 `profiles` 테이블에 반영
   - Acceptance: 닉네임 저장 시 `profiles` 테이블 UPDATE, 변경 후 UI 즉시 반영
-  - Note: `pm_user` localStorage → Supabase `profiles` 쿼리로 교체
+  - Note: 현재 `AuthContext.tsx`에서 `clerkUser.update({ firstName })` — Clerk 네이티브 방식으로 동작 중. `profiles` 테이블 생성 후 Supabase 쿼리 병행 필요
 
 ---
 
@@ -234,6 +234,10 @@
 - [ ] 미번역 UI 텍스트 전체 정리 (i18n 완성)
   - Acceptance: `/en/` 접근 시 모든 UI 텍스트 영어 표시, 하드코딩된 한국어 텍스트 없음
   - Note: 번역 누락 분석 완료 상태 — 실제 코드에서 `t('key')` 교체 작업 필요
+
+- [ ] `AppContext.tsx` 정리 (레거시 제거)
+  - Acceptance: `context/AppContext.tsx` 삭제 또는 폐기 처리 — `AuthContext` + `CartContext`로 완전 대체됨
+  - Note: 현재 어떤 페이지·컴포넌트에서도 import되지 않으나 파일이 잔존 중
 
 - [ ] 에러 바운더리 및 `not-found.tsx`, `error.tsx` 추가
   - Acceptance: 존재하지 않는 `/prompt/[id]` 접근 시 `not-found.tsx` 렌더링, 서버 에러 시 `error.tsx` 렌더링

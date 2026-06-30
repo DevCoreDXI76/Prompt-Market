@@ -174,7 +174,7 @@ export default function CartPage() {
               <div className="rounded-xl bg-slate-50 p-3 flex items-start gap-2.5 dark:bg-zinc-800">
                 <ShieldCheck className="h-4 w-4 text-slate-400 shrink-0 mt-0.5 dark:text-zinc-500" />
                 <p className="text-[10px] sm:text-xs text-slate-400 leading-normal dark:text-zinc-500">
-                  토스페이먼츠 테스트 결제 환경입니다. 실결제는 청구되지 않습니다.
+                  {t("testNotice")}
                 </p>
               </div>
             </div>

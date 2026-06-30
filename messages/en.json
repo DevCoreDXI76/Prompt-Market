@@ -135,7 +135,8 @@
     "successTitle": "Payment Complete!",
     "successDesc": "Your order has been confirmed.\nYour purchased prompts are now unlocked.",
     "viewPurchases": "View Purchase History",
-    "priceUnit": "₩{price}"
+    "priceUnit": "₩{price}",
+    "testNotice": "This is test payment mode. No actual charges will be made. Try the payment safely in the TossPayments sandbox environment."
   },
   "PaymentModal": {
     "brand": "toss",
@@ -213,5 +214,47 @@
     "dark": "Dark",
     "system": "System",
     "ariaLabel": "Change theme"
+  },
+  "CheckoutPage": {
+    "noItems": "No items to purchase.",
+    "backToCart": "Back to Cart",
+    "backToProduct": "Back to Product",
+    "title": "Checkout",
+    "orderSummary": "Order Summary",
+    "subtotal": "Subtotal",
+    "fee": "Fees",
+    "total": "Order Total",
+    "widgetLoadError": "Failed to load payment widget. Please refresh the page.",
+    "paying": "Processing...",
+    "widgetLoading": "Loading payment widget...",
+    "payButton": "Pay ₩{price}",
+    "priceUnit": "₩{price}",
+    "testModeNotice": "This is test payment mode. No actual charges will be made. Try the payment safely in the TossPayments sandbox environment.",
+    "defaultPromptName": "Prompt"
+  },
+  "CheckoutSuccess": {
+    "loadingTitle": "Confirming your payment",
+    "loadingDesc": "Please wait a moment...",
+    "successTitle": "Payment complete!",
+    "successDesc": "Your payment has been successfully approved.",
+    "successUnlocked": "Your purchased prompt has been unlocked.",
+    "redirectNotice": "Redirecting to your purchase history...",
+    "viewPurchases": "View Purchase History",
+    "errorTitle": "Payment confirmation failed",
+    "errorContact": "Please try again or contact support.",
+    "backToCart": "Back to Cart",
+    "missingParams": "Unable to verify payment information.",
+    "confirmFailed": "Payment confirmation failed.",
+    "unknownError": "An error occurred during payment processing."
+  },
+  "CheckoutFail": {
+    "canceledTitle": "Payment canceled",
+    "failedTitle": "Payment failed",
+    "canceledDesc": "You have canceled the payment. Please try again or return to your cart.",
+    "failedDesc": "A problem occurred during payment processing.",
+    "failedContact": "Please try again or contact support.",
+    "errorCode": "Error code: {code}",
+    "backToCart": "Back to Cart",
+    "retry": "Try Again"
   }
 }

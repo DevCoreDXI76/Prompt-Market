@@ -2,10 +2,12 @@
 
 import React from "react";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { XCircle, ArrowLeft, RefreshCw } from "lucide-react";
 
 export default function CheckoutFailPage() {
+  const t = useTranslations("CheckoutFail");
   const searchParams = useSearchParams();
 
   const code = searchParams.get("code");
@@ -21,7 +23,7 @@ export default function CheckoutFailPage() {
 
       <div className="space-y-2">
         <h1 className="font-bold text-xl text-slate-900 dark:text-zinc-50">
-          {isCanceled ? "결제가 취소되었습니다" : "결제에 실패했습니다"}
+          {isCanceled ? t("canceledTitle") : t("failedTitle")}
         </h1>
 
         {message && !isCanceled && (
@@ -32,19 +34,19 @@ export default function CheckoutFailPage() {
 
         {isCanceled ? (
           <p className="text-sm text-slate-500 dark:text-zinc-400">
-            결제를 취소하셨습니다. 다시 결제를 진행하거나 장바구니로 돌아가세요.
+            {t("canceledDesc")}
           </p>
         ) : (
           <p className="text-sm text-slate-500 dark:text-zinc-400">
-            결제 처리 중 문제가 발생했습니다.
+            {t("failedDesc")}
             <br />
-            다시 시도하거나 고객센터에 문의해 주세요.
+            {t("failedContact")}
           </p>
         )}
 
         {code && !isCanceled && (
           <p className="text-xs text-slate-400 font-mono dark:text-zinc-500">
-            오류 코드: {code}
+            {t("errorCode", { code })}
           </p>
         )}
       </div>
@@ -55,14 +57,14 @@ export default function CheckoutFailPage() {
           className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-all dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
         >
           <ArrowLeft className="h-4 w-4" />
-          장바구니로
+          {t("backToCart")}
         </Link>
         <button
           onClick={() => window.history.back()}
           className="flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800 transition-all cursor-pointer dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
         >
           <RefreshCw className="h-4 w-4" />
-          다시 결제하기
+          {t("retry")}
         </button>
       </div>
     </div>

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { useSearchParams, useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { loadTossPayments, ANONYMOUS } from "@tosspayments/tosspayments-sdk";
 import { useUser } from "@clerk/nextjs";
 import { useCart } from "@/context/CartContext";
@@ -21,6 +22,7 @@ type TossWidgets = Awaited<
 >;
 
 export default function CheckoutPage() {
+  const t = useTranslations("CheckoutPage");
   const searchParams = useSearchParams();
   const params = useParams();
   const locale = (params?.locale as string) ?? "ko";
@@ -42,7 +44,7 @@ export default function CheckoutPage() {
 
   const orderName =
     products.length === 0
-      ? "프롬프트"
+      ? t("defaultPromptName")
       : products.length === 1
       ? products[0].title
       : `${products[0].title} 외 ${products.length - 1}건`;
@@ -83,12 +85,12 @@ export default function CheckoutPage() {
         setIsReady(true);
       } catch (err) {
         console.error("[TossPayments] Widget init error:", err);
-        setInitError("결제 위젯을 불러오는 데 실패했습니다. 페이지를 새로고침해 주세요.");
+        setInitError(t("widgetLoadError"));
       }
     }
 
     initWidgets();
-  }, [clerkUser?.id, totalAmount, products.length]);
+  }, [clerkUser?.id, totalAmount, products.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePayment = async () => {
     if (!widgets || isLoading) return;
@@ -116,6 +118,7 @@ export default function CheckoutPage() {
         setIsLoading(false);
         return;
       }
+      // Toss SDK가 반환하는 한국어 취소 메시지 처리
       if (error?.message === "취소되었습니다." || error?.message === "취소되었습니다") {
         setIsLoading(false);
         return;
@@ -128,13 +131,13 @@ export default function CheckoutPage() {
   if (products.length === 0) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 text-center">
-        <p className="text-slate-500 mb-6">결제할 상품이 없습니다.</p>
+        <p className="text-slate-500 mb-6">{t("noItems")}</p>
         <Link
           href="/cart"
           className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 transition-all"
         >
           <ArrowLeft className="h-4 w-4" />
-          장바구니로 돌아가기
+          {t("backToCart")}
         </Link>
       </div>
     );
@@ -147,15 +150,14 @@ export default function CheckoutPage() {
         className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-slate-900 mb-8 transition-colors dark:text-zinc-400 dark:hover:text-zinc-100"
       >
         <ArrowLeft className="h-4 w-4" />
-        <span>{orderType === "direct" ? "상품 페이지로 돌아가기" : "장바구니로 돌아가기"}</span>
+        <span>{orderType === "direct" ? t("backToProduct") : t("backToCart")}</span>
       </Link>
 
       <h1 className="font-bold text-2xl sm:text-3xl text-slate-900 mb-8 dark:text-zinc-50">
-        결제하기
+        {t("title")}
       </h1>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 items-start">
-        {/* 결제 위젯 영역 */}
         <div className="lg:col-span-7 space-y-4">
           <div className="rounded-2xl border border-slate-100 bg-white overflow-hidden shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
             {initError ? (
@@ -177,11 +179,10 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        {/* 주문 요약 */}
         <div className="lg:col-span-5">
           <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-md space-y-6 dark:border-zinc-800 dark:bg-zinc-900 sticky top-24">
             <h2 className="font-bold text-base sm:text-lg text-slate-900 pb-2 border-b border-slate-50 dark:text-zinc-50 dark:border-zinc-800">
-              주문 요약
+              {t("orderSummary")}
             </h2>
 
             <div className="space-y-3">
@@ -205,7 +206,7 @@ export default function CheckoutPage() {
                       {item.title}
                     </p>
                     <p className="text-xs font-bold text-slate-900 font-sans mt-0.5 dark:text-zinc-100">
-                      {item.price.toLocaleString()}원
+                      {t("priceUnit", { price: item.price.toLocaleString() })}
                     </p>
                   </div>
                 </div>
@@ -214,20 +215,22 @@ export default function CheckoutPage() {
 
             <div className="space-y-3 text-xs sm:text-sm border-t border-slate-100 pt-4 dark:border-zinc-800">
               <div className="flex justify-between text-slate-500 dark:text-zinc-400">
-                <span>상품 금액</span>
+                <span>{t("subtotal")}</span>
                 <span className="font-semibold font-sans text-slate-800 dark:text-zinc-200">
-                  {totalAmount.toLocaleString()}원
+                  {t("priceUnit", { price: totalAmount.toLocaleString() })}
                 </span>
               </div>
               <div className="flex justify-between text-slate-500 dark:text-zinc-400">
-                <span>수수료</span>
-                <span className="font-semibold font-sans text-slate-800 dark:text-zinc-200">0원</span>
+                <span>{t("fee")}</span>
+                <span className="font-semibold font-sans text-slate-800 dark:text-zinc-200">
+                  {t("priceUnit", { price: "0" })}
+                </span>
               </div>
               <hr className="border-slate-100 dark:border-zinc-800" />
               <div className="flex justify-between items-center pt-1">
-                <span className="font-semibold text-slate-800 dark:text-zinc-200">총 결제 금액</span>
+                <span className="font-semibold text-slate-800 dark:text-zinc-200">{t("total")}</span>
                 <span className="font-bold text-lg sm:text-xl text-indigo-600 dark:text-indigo-400 font-sans">
-                  {totalAmount.toLocaleString()}원
+                  {t("priceUnit", { price: totalAmount.toLocaleString() })}
                 </span>
               </div>
             </div>
@@ -240,17 +243,17 @@ export default function CheckoutPage() {
               {isLoading ? (
                 <>
                   <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>결제 중...</span>
+                  <span>{t("paying")}</span>
                 </>
               ) : !isReady ? (
                 <>
                   <div className="h-4 w-4 border-2 border-white/50 border-t-white rounded-full animate-spin" />
-                  <span>결제 위젯 로딩 중...</span>
+                  <span>{t("widgetLoading")}</span>
                 </>
               ) : (
                 <>
                   <Lock className="h-4 w-4" />
-                  <span>{totalAmount.toLocaleString()}원 결제하기</span>
+                  <span>{t("payButton", { price: totalAmount.toLocaleString() })}</span>
                 </>
               )}
             </button>
@@ -258,7 +261,7 @@ export default function CheckoutPage() {
             <div className="rounded-xl bg-slate-50 p-3 flex items-start gap-2.5 dark:bg-zinc-800">
               <ShieldCheck className="h-4 w-4 text-slate-400 shrink-0 mt-0.5 dark:text-zinc-500" />
               <p className="text-[10px] sm:text-xs text-slate-400 leading-normal dark:text-zinc-500">
-                테스트 결제 모드입니다. 실제 결제는 이루어지지 않습니다. 토스페이먼츠 샌드박스 환경에서 안전하게 결제를 체험하세요.
+                {t("testModeNotice")}
               </p>
             </div>
           </div>

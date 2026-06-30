@@ -135,7 +135,8 @@
     "successTitle": "결제가 완료되었습니다!",
     "successDesc": "성공적으로 주문이 승인되었습니다.\n구매하신 프롬프트 전문이 잠금해제되었습니다.",
     "viewPurchases": "구매 내역에서 확인하기",
-    "priceUnit": "{price}원"
+    "priceUnit": "{price}원",
+    "testNotice": "토스페이먼츠 테스트 결제 환경입니다. 실결제는 청구되지 않습니다."
   },
   "PaymentModal": {
     "brand": "toss",
@@ -213,5 +214,47 @@
     "dark": "다크",
     "system": "시스템",
     "ariaLabel": "테마 변경"
+  },
+  "CheckoutPage": {
+    "noItems": "결제할 상품이 없습니다.",
+    "backToCart": "장바구니로 돌아가기",
+    "backToProduct": "상품 페이지로 돌아가기",
+    "title": "결제하기",
+    "orderSummary": "주문 요약",
+    "subtotal": "상품 금액",
+    "fee": "수수료",
+    "total": "총 결제 금액",
+    "widgetLoadError": "결제 위젯을 불러오는 데 실패했습니다. 페이지를 새로고침해 주세요.",
+    "paying": "결제 중...",
+    "widgetLoading": "결제 위젯 로딩 중...",
+    "payButton": "{price}원 결제하기",
+    "priceUnit": "{price}원",
+    "testModeNotice": "테스트 결제 모드입니다. 실제 결제는 이루어지지 않습니다. 토스페이먼츠 샌드박스 환경에서 안전하게 결제를 체험하세요.",
+    "defaultPromptName": "프롬프트"
+  },
+  "CheckoutSuccess": {
+    "loadingTitle": "결제를 승인하는 중입니다",
+    "loadingDesc": "잠시만 기다려 주세요...",
+    "successTitle": "결제가 완료되었습니다!",
+    "successDesc": "성공적으로 결제가 승인되었습니다.",
+    "successUnlocked": "구매하신 프롬프트 잠금이 해제되었습니다.",
+    "redirectNotice": "곧 구매 내역 페이지로 이동합니다...",
+    "viewPurchases": "구매 내역 보기",
+    "errorTitle": "결제 승인에 실패했습니다",
+    "errorContact": "다시 시도하시거나 고객센터에 문의해 주세요.",
+    "backToCart": "장바구니로 돌아가기",
+    "missingParams": "결제 정보를 확인할 수 없습니다.",
+    "confirmFailed": "결제 승인에 실패했습니다.",
+    "unknownError": "결제 처리 중 오류가 발생했습니다."
+  },
+  "CheckoutFail": {
+    "canceledTitle": "결제가 취소되었습니다",
+    "failedTitle": "결제에 실패했습니다",
+    "canceledDesc": "결제를 취소하셨습니다. 다시 결제를 진행하거나 장바구니로 돌아가세요.",
+    "failedDesc": "결제 처리 중 문제가 발생했습니다.",
+    "failedContact": "다시 시도하거나 고객센터에 문의해 주세요.",
+    "errorCode": "오류 코드: {code}",
+    "backToCart": "장바구니로",
+    "retry": "다시 결제하기"
   }
 }

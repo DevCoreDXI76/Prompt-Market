@@ -13,6 +13,7 @@ import { useToast } from "./ToastContext";
 import { createAuthenticatedClient } from "@/lib/supabase/client";
 
 export interface User {
+  id: string;      // Clerk user ID (auth.jwt()->>'sub')
   email: string;
   nickname: string;
   profileImage: string;
@@ -44,6 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clerkUser.primaryEmailAddress?.emailAddress ?? "";
 
     return {
+      id: clerkUser.id,
       email: primaryEmail,
       nickname:
         clerkUser.fullName ??
