@@ -92,7 +92,7 @@ def git_cmd(args: list) -> str:
 def get_commit_info() -> tuple:
     message = git_cmd(["log", "-1", "--pretty=%B"])
     commit_hash = git_cmd(["log", "-1", "--pretty=%H"])
-    author_time = git_cmd(["log", "-1", "--pretty=%ai"])
+    author_time = git_cmd(["log", "-1", "--pretty=%aI"])
     commit_time = git_cmd(["log", "-1", "--pretty=%cI"])
     changed_files = git_cmd(["diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD"])
 
