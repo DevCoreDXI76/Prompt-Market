@@ -1,6 +1,6 @@
 # TODO
 
-> 마지막 업데이트: 2026-06-30 (P1 백엔드 마이그레이션 완료)
+> 마지막 업데이트: 2026-06-30 (P1 전체 완료)
 > 기준 문서: `docs/PRD.md`
 > 우선순위: P0 (프론트엔드+Mock) → P1 (Supabase 연동) → P2 (부가 기능)
 
@@ -86,9 +86,9 @@
   - Acceptance: PRD 4.4 스키마에 맞게 3개 테이블 생성됨, `carts`의 `unique(user_id, prompt_id)` 제약 포함
   - Note: Supabase MCP `apply_migration`으로 생성, user_id/buyer_id는 Clerk user ID(text) 사용, RLS 정책 설정 완료
 
-- [ ] `profiles` 자동 생성 트리거
+- [x] `profiles` 자동 생성 트리거
   - Acceptance: Clerk 신규 사용자 등록 시 또는 첫 로그인 시 `profiles` 레코드 자동 생성
-  - Note: Clerk Webhook 또는 AuthContext의 upsert 패턴 활용 예정
+  - Note: `AuthContext`의 `useEffect` + `POST /api/profile/upsert` upsert 패턴으로 구현
 
 ### 인증 (Clerk)
 
@@ -127,9 +127,9 @@
   - Acceptance: 어드민 페이지에서 Supabase `prompts` 테이블 생성·수정·삭제 동작, `ADMIN_CLERK_USER_ID` 환경변수로 접근 제어
   - Note: `lib/supabase/prompts.ts`의 `createPrompt`, `updatePrompt`, `deletePrompt` 사용, service_role 키 적용
 
-- [ ] Supabase Storage 버킷 생성 및 상품 이미지 업로드
+- [x] Supabase Storage 버킷 생성 및 상품 이미지 업로드
   - Acceptance: `prompts` 버킷 생성, 기존 상품 이미지를 Storage에 업로드, `image_urls` 필드에 Storage URL 저장
-  - Note: 현재 외부 URL(picsum 등) 사용 중 → Storage로 이관 예정
+  - Note: `avatars`(프로필 이미지, 5MB), `prompts`(상품 이미지, 10MB) 버킷 생성 완료(public=true). 상품 이미지는 어드민 페이지에서 `POST /api/storage/upload`로 업로드 가능
 
 ### 장바구니 마이그레이션 (R04)
 
@@ -209,13 +209,13 @@
 
 ### 프로필 마이그레이션 (R06)
 
-- [ ] 프로필 이미지 Supabase Storage 업로드로 교체
+- [x] 프로필 이미지 Supabase Storage 업로드로 교체
   - Acceptance: 아바타 변경 시 Supabase Storage에 업로드, `profiles.avatar_url`에 Storage URL 저장
-  - Note: 현재 `AuthContext.tsx`에서 `clerkUser.setProfileImage({ file })` — Clerk 네이티브 CDN 업로드 방식으로 동작 중. Supabase Storage(`prompts` 버킷 또는 `avatars` 버킷) 연동으로 교체 필요
+  - Note: `AuthContext.updateProfile` — base64 이미지 시 `POST /api/storage/upload`(`avatars` 버킷)로 업로드 후 `POST /api/profile/upsert`(action=avatar)로 `profiles.avatar_url` 저장. Clerk CDN 동기화도 병행 유지
 
-- [ ] 닉네임·아바타 변경을 `profiles` 테이블에 반영
+- [x] 닉네임·아바타 변경을 `profiles` 테이블에 반영
   - Acceptance: 닉네임 저장 시 `profiles` 테이블 UPDATE, 변경 후 UI 즉시 반영
-  - Note: 현재 `AuthContext.tsx`에서 `clerkUser.update({ firstName })` — Clerk 네이티브 방식으로 동작 중. `profiles` 테이블 생성 후 Supabase 쿼리 병행 필요
+  - Note: `AuthContext.updateProfile` — `clerkUser.update()` 후 `POST /api/profile/upsert`(action=nickname)로 `profiles.nickname` 병행 업데이트. `lib/supabase/profiles.ts` + `app/api/profile/upsert/route.ts` 추가
 
 ---
 

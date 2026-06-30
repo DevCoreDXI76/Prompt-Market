@@ -4,6 +4,8 @@ import React, {
   createContext,
   useContext,
   useCallback,
+  useEffect,
+  useRef,
   useMemo,
 } from "react";
 import { useTranslations } from "next-intl";
@@ -37,6 +39,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { isLoaded, isSignedIn, user: clerkUser } = useUser();
   const { session } = useSession();
   const { signOut } = useClerk();
+
+  // 로그인 시 profiles 레코드 자동 생성 (P1-1)
+  // 같은 사용자에 대해 한 세션에서 한 번만 upsert하도록 ref로 추적
+  const profileUpsertedRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn || !clerkUser) return;
+    if (profileUpsertedRef.current === clerkUser.id) return;
+
+    profileUpsertedRef.current = clerkUser.id;
+
+    const primaryEmail = clerkUser.primaryEmailAddress?.emailAddress ?? "";
+    const nickname =
+      clerkUser.fullName ??
+      clerkUser.username ??
+      primaryEmail.split("@")[0] ??
+      "사용자";
+
+    fetch("/api/profile/upsert", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nickname }),
+    }).catch((err) => {
+      console.error("[AuthContext] profiles upsert failed:", err);
+    });
+  }, [isLoaded, isSignedIn, clerkUser]);
 
   const user = useMemo<User | null>(() => {
     if (!isSignedIn || !clerkUser) return null;
@@ -74,17 +102,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!clerkUser) return;
 
       try {
-        await clerkUser.update({
-          firstName: nickname,
-          lastName: "",
+        // 1) Clerk 닉네임 업데이트
+        await clerkUser.update({ firstName: nickname, lastName: "" });
+
+        // 2) Supabase profiles 닉네임 반영 (P1-4)
+        await fetch("/api/profile/upsert", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "nickname", nickname }),
         });
 
-        // base64 이미지인 경우 Clerk 프로필 사진 업데이트
+        // 3) base64 이미지인 경우 Storage 업로드 후 profiles 반영 (P1-3)
         if (profileImage && profileImage.startsWith("data:")) {
-          const response = await fetch(profileImage);
-          const blob = await response.blob();
+          const fetchResponse = await fetch(profileImage);
+          const blob = await fetchResponse.blob();
           const file = new File([blob], "avatar.png", { type: blob.type });
+
+          // Clerk 프로필 사진 동기화
           await clerkUser.setProfileImage({ file });
+
+          // Supabase Storage 업로드
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("bucket", "avatars");
+          formData.append("path", `${clerkUser.id}/avatar.png`);
+
+          const uploadRes = await fetch("/api/storage/upload", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (uploadRes.ok) {
+            const { url } = await uploadRes.json();
+            // profiles.avatar_url 업데이트
+            await fetch("/api/profile/upsert", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ action: "avatar", avatarUrl: url }),
+            });
+          }
         }
 
         addToast(t("profileSaved"));
