@@ -1,0 +1,24 @@
+#!/bin/sh
+# Git post-commit hook: Notion Tasks DB 자동 기록
+# 설치: pnpm hooks:install (또는 pnpm install)
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+SCRIPT_DIR="$(dirname "$0")"
+
+PYTHON_CMD=""
+if command -v py > /dev/null 2>&1; then
+    PYTHON_CMD="py"
+elif command -v python3 > /dev/null 2>&1; then
+    PYTHON_CMD="python3"
+elif command -v python > /dev/null 2>&1; then
+    PYTHON_CMD="python"
+fi
+
+if [ -z "$PYTHON_CMD" ]; then
+    echo "⚠️  Python을 찾을 수 없습니다. Notion 기록을 건너뜁니다." >&2
+    exit 0
+fi
+
+"$PYTHON_CMD" "$SCRIPT_DIR/notion_task_logger.py" "$REPO_ROOT"
+
+exit 0
