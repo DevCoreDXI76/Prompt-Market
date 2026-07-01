@@ -31,6 +31,9 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
+# Notion onboarding (local only — not on GitHub)
+.notion/
+
 # vercel
 .vercel
 

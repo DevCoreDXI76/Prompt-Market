@@ -1,65 +1,82 @@
-# 리서치 결과
+# Prompt Market — 프로젝트 계획
 
-## PRD vs 현재 구현 차이 요약
-
-현재 prompt-market은 **클라이언트 사이드 프로토타입**이다. Supabase·실결제·관리자 기능은 코드에 없으며, 상품 데이터는 `lib/promptData.ts` 정적 목록, 사용자·장바구니·구매 상태는 브라우저 `localStorage`로 관리된다.
-
-| 영역 | 기존 PRD | 현재 구현 |
-|------|----------|-----------|
-| 데이터 | Supabase 테이블 | `lib/promptData.ts` 정적 4개 상품 |
-| 인증 | Supabase Auth | 이메일 프로토타입 + 첫 방문 시 기본 사용자 자동 로그인 |
-| 결제 | 토스페이먼츠 SDK | 장바구니: Toss 스타일 모의 UI / 바로구매: 확인 모달 후 즉시 처리 |
-| `/` | 상품 목록만 | Hero + 3D 마퀴 + 필터/검색 + 상품 그리드 |
-| `/prompts` | 없음 | 전체 마켓 + 정렬(인기/평점/가격) |
-| 구매내역 | placeholder | 상세 구현 완료, PRD 누락 |
-
-**라우트:** `/`, `/prompts`, `/prompt/[id]`, `/cart`, `/profile`, `/my-page`, `/login` — 7개 전부 구현됨.
-
-**사용자 의사결정:**
-- 본문 = 현재 구현, 미구현 = "향후 계획" 분리
-- "데이터/상태 모델" 섹션에 localStorage 키·구조 명시
+> **마지막 업데이트:** 2026-07-01
+> **상태:** P0~P2 완료, 문서 동기화 완료
+> **상세 체크리스트:** `docs/TODO.md` · **제품 명세:** `docs/PRD.md`
 
 ---
 
-# 실행 계획
+## 현재 상태 요약
 
-## Step 1 — docs/PLAN.md 생성
-- [x] planner.mdc 구조(리서치/실행계획/리스크)로 기록
+Prompt Market은 **프로토타입(P0)에서 실서비스 스택(P1~P2)으로 마이그레이션이 완료**된 상태이다.
 
-## Step 2 — PRD 섹션 1 개정
-- [x] 프로토타입 단계 명시
-- [x] 관리자 역할을 "향후 계획" 참조로 변경
-- [x] 정적 데이터 소스 명시
-
-## Step 3 — PRD 섹션 2 전면 개정
-- [x] 2.1~2.9 화면 명세 작성
-- [x] `/` vs `/prompts` 차이, 결제 2경로, 자동 로그인 동작 반영
-- [x] "이전 PRD와 동일" placeholder 삭제
-- [x] Hero 쇼케이스 데모 카드는 "장식용"으로 구분
-
-## Step 4 — PRD 섹션 3 (데이터/상태 모델) 작성
-- [x] localStorage 키·타입·핵심 로직 기술
-- [x] `PromptProduct` 필드 목록 기술
-
-## Step 5 — PRD 섹션 4 (향후 계획) 작성
-- [x] 기존 Supabase 스키마·결제·관리자 내용 이관
-- [x] 본문에서 Supabase/실결제가 현재 구현처럼 읽히지 않도록 교차 검증
-
-## Step 6 — 검증
-- [x] 7개 라우트 모두 PRD에 존재
-- [x] 본문 용어: UX 관점 표현 사용
-- [x] 코드 변경 없음 (문서만 수정)
-
-**변경 파일:** `docs/PRD.md`, `docs/PLAN.md`
+| 영역 | 현재 구현 |
+|------|-----------|
+| 프레임워크 | Next.js 15 App Router, `app/[locale]/` |
+| 인증 | Clerk (Sign In / Sign Up, 한국어 UI) |
+| 데이터베이스 | Supabase — `prompts`, `profiles`, `carts`, `purchases` |
+| 스토리지 | Supabase Storage — `avatars`, `prompts` |
+| 결제 | 토스페이먼츠 위젯 SDK + 서버 승인 (`/api/payment/confirm`) |
+| 상품 | Supabase 32개 시드 (`pnpm seed:prompts`) |
+| i18n | next-intl — ko(기본) / en |
+| 관리자 | `/admin` — `ADMIN_CLERK_USER_ID` 접근 제어 |
+| 배포 | Vercel (`coredxi-prompt-market`) |
 
 ---
 
-# 리스크 & 대응
+## 완료된 단계
+
+### Phase 0 — 프론트엔드 + Mock (완료)
+
+- R01~R07 라우트, AppContext + localStorage, 가상 결제 데모
+- 이후 P1에서 대부분 교체됨 (`AppContext` 삭제)
+
+### Phase 1 — Supabase·Clerk·실결제 (완료)
+
+- Supabase 프로젝트, 테이블·RLS, Clerk JWT 통합
+- 상품·장바구니·구매·프로필 Supabase 마이그레이션
+- 토스페이먼츠 `/checkout` 플로우
+- next-intl, 다크 모드, SEO 메타데이터
+
+### Phase 2 — 부가 기능·배포 (완료)
+
+- 상품 32개 시드, `/prompts` 페이지네이션
+- i18n 전체 정리, 에러 바운더리, a11y, Vercel 배포
+
+---
+
+## 문서 동기화 이력
+
+| 일자 | 작업 |
+|------|------|
+| 2026-06 (초기) | PRD AS-IS/TO-BE 분리, PLAN.md 프로토타입 기준 작성 |
+| 2026-07-01 | PRD·PLAN·README를 **현재 구현** 기준으로 전면 갱신 |
+
+**변경 내용:**
+- `docs/PRD.md` — 섹션 3을 "현재 구현", 섹션 4를 "레거시 AS-IS"로 재구성. 라우트 레지스트리에 `/checkout`, `/sign-in`, `/admin` 등 추가.
+- `docs/PLAN.md` — 마이그레이션 완료 상태로 갱신 (본 문서).
+- `README.md` — AI Studio 템플릿 → 프로젝트 설정 가이드로 교체.
+
+---
+
+## 향후 개선 후보 (TODO 미등록)
+
+아래는 `docs/TODO.md` 범위 밖의 선택적 개선 사항이다.
+
+| 항목 | 설명 |
+|------|------|
+| Admin i18n | `/admin` UI 영어 번역 (현재 ko-only 의도) |
+| Dead code 정리 | `components/cart/PaymentModal.tsx` 삭제 |
+| 상품 DB 다국어 | `lib/promptLocalization.ts` 기반 title/description EN 지원 확장 |
+| PRD 원본 TO-BE | Supabase Auth 대신 Clerk 채택 — 문서에 반영 완료 |
+
+---
+
+## 리스크 & 대응 (현재)
 
 | 리스크 | 대응 |
 |--------|------|
-| 자동 로그인 동작이 "로그인 필요"와 모순돼 보임 | 섹션 1·2.8·3에 "첫 방문 시 데모 사용자 자동 로그인"을 프로토타입 의도로 명시 |
-| 바로구매 vs 장바구니 결제 UX 차이 혼동 | 섹션 2.4·2.5에 각각 별도 플로우로 기술, 섹션 3에 로직 요약 |
-| Hero 쇼케이스 $ 가격이 실제 상품과 혼동 | 섹션 2.2에 "데모 쇼케이스(실제 catalog 아님)" 명시 |
-| 향후 계획과 현재 구현 경계 blur | 섹션 4 제목을 "향후 계획 (미구현)"으로 고정, 본문에서 Supabase 언급 제거 |
-| `/` 역할 변경 (목록 → 랜딩) | 2.2를 "메인 페이지 (랜딩 + 미리보기)"로 제목 변경, `/prompts`를 전용 마켓으로 분리 기술 |
+| 비로그인 localStorage와 Supabase 데이터 불일치 | 로그인 시 Supabase 우선, 비로그인은 데모용 fallback으로 명시 |
+| 클라이언트 가격 조작 | 결제 승인은 서버 Route Handler에서 처리 |
+| Clerk ↔ Supabase JWT 만료 | `createAuthenticatedClient`에서 세션 토큰 갱신 |
+| Admin UI 한국어 only | 의도적 범위 제외, PRD 3.2.10에 명시 |
